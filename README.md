@@ -6,3 +6,5 @@ LogiSync: Simple Web App for Freight and Digital Waybills
 
 “Some infinities are bigger than other infinities.”
 ― John Green, The Fault in Our Stars (Kaden's Quote)
+
+"Never let a problem to be solved become more important than a person to be loved."  President Thomas S. Monson
