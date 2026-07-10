@@ -8,3 +8,5 @@ LogiSync: Simple Web App for Freight and Digital Waybills
 ― John Green, The Fault in Our Stars (Kaden's Quote)
 
 "Never let a problem to be solved become more important than a person to be loved."  President Thomas S. Monson (JC's Quote)
+
+"The people who are crazy enough to think they can change the world are the ones who do." — Steve Jobs (Armando fernandez` Quote)
