@@ -3,6 +3,7 @@
 ## Setup Instructions
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
@@ -12,12 +13,15 @@ npm install
 Edit `.env` and choose your database:
 
 #### Option A: SQLite (Local Testing)
+
 ```
 DATABASE_URL="file:./prisma/dev.db"
 ```
 
 #### Option B: PostgreSQL (Production)
+
 Update `prisma/schema.prisma`:
+
 ```prisma
 datasource db {
   provider = "postgresql"
@@ -25,16 +29,19 @@ datasource db {
 ```
 
 Then in `.env`:
+
 ```
 DATABASE_URL="postgresql://user:password@host:port/database"
 ```
 
 ### 3. Run Migrations
+
 ```bash
 npx prisma migrate dev
 ```
 
 ### 4. Start Development Server
+
 ```bash
 npm run dev
 ```
@@ -46,6 +53,7 @@ Server runs at `http://localhost:3000`
 ## API Endpoints
 
 ### **Create Driver**
+
 - **POST** `/api/drivers`
 - **Body:**
   ```json
@@ -60,6 +68,7 @@ Server runs at `http://localhost:3000`
 - **Errors:** 400 (missing fields), 409 (phone exists)
 
 ### **Get All Drivers**
+
 - **GET** `/api/drivers`
 - **Query Params (optional):**
   - `city=NewYork` - Filter by preferred city
@@ -70,11 +79,13 @@ Server runs at `http://localhost:3000`
   ```
 
 ### **Get Single Driver**
+
 - **GET** `/api/drivers/:id`
 - **Response:** 200 OK + Driver object with waybills
 - **Errors:** 404 (not found)
 
 ### **Update Driver**
+
 - **PUT** `/api/drivers/:id`
 - **Body:** Any driver field(s) to update
   ```json
@@ -87,6 +98,7 @@ Server runs at `http://localhost:3000`
 - **Errors:** 404 (not found), 409 (phone in use)
 
 ### **Delete Driver**
+
 - **DELETE** `/api/drivers/:id`
 - **Response:** 200 OK + Success message
 - **Errors:** 404 (not found)
@@ -96,6 +108,7 @@ Server runs at `http://localhost:3000`
 ## Testing with cURL
 
 ### Create a driver:
+
 ```bash
 curl -X POST http://localhost:3000/api/drivers \
   -H "Content-Type: application/json" \
@@ -108,21 +121,25 @@ curl -X POST http://localhost:3000/api/drivers \
 ```
 
 ### Get all drivers:
+
 ```bash
 curl http://localhost:3000/api/drivers
 ```
 
 ### Filter by city:
+
 ```bash
 curl "http://localhost:3000/api/drivers?city=Los Angeles"
 ```
 
 ### Get single driver:
+
 ```bash
 curl http://localhost:3000/api/drivers/{id}
 ```
 
 ### Update driver:
+
 ```bash
 curl -X PUT http://localhost:3000/api/drivers/{id} \
   -H "Content-Type: application/json" \
@@ -130,6 +147,7 @@ curl -X PUT http://localhost:3000/api/drivers/{id} \
 ```
 
 ### Delete driver:
+
 ```bash
 curl -X DELETE http://localhost:3000/api/drivers/{id}
 ```
@@ -152,6 +170,7 @@ curl -X DELETE http://localhost:3000/api/drivers/{id}
 ## Database Schema
 
 ### Driver Model
+
 ```
 id              : String (CUID, Primary Key)
 name            : String
@@ -164,6 +183,7 @@ waybills        : Waybill[] (relation)
 ```
 
 ### Waybill Model (for future use)
+
 ```
 id              : String (CUID, Primary Key)
 driverId        : String (FK to Driver)
@@ -201,6 +221,7 @@ driver          : Driver (relation)
 ## Environment Variables Template
 
 Create `.env` file:
+
 ```
 # Database
 DATABASE_URL="file:./prisma/dev.db"
@@ -208,4 +229,3 @@ DATABASE_URL="file:./prisma/dev.db"
 # API
 NODE_ENV="development"
 ```
-
