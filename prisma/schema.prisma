@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  // Choose one (also update datasource in prisma.config.ts):
+  // PostgreSQL (production): provider = "postgresql"
+  // SQLite (local testing): provider = "sqlite"
+  provider = "sqlite"
+}
+
+// Driver model for third-party freight drivers
+model Driver {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String   @unique
+  truckSize     String   // e.g., "small", "medium", "large"
+  preferredCities String  // Comma-separated cities. For PostgreSQL, change to String[]
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations (for future use)
+  waybills      Waybill[]
+  
+  @@map("drivers")
+}
+
+// Waybill model for digital shipment documentation
+model Waybill {
+  id            String   @id @default(cuid())
+  driverId      String
+  driver        Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  
+  // Shipment details
+  senderName    String
+  senderPhone   String
+  receiverName  String
+  receiverPhone String
+  destination   String
+  weight        Float    // in kg
+  volume        Float    // in m³
+  description   String?
+  
+  // Financials
+  clientCost    Float
+  driverPayment Float
+  netMargin     Float
+  
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  status        String   @default("pending") // pending, in_transit, delivered
+  
+  @@map("waybills")
+}
