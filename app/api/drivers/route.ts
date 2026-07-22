@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 // Use global to avoid creating multiple PrismaClient instances
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+const adapter = new PrismaPg(pool);
+
 const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    adapter: new PrismaBetterSqlite3({
-      url: "file:./prisma/dev.db",
-    }),
+    adapter,
     log:
       process.env.NODE_ENV === "development"
         ? ["error", "warn"]

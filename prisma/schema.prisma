@@ -11,7 +11,7 @@ datasource db {
   // Choose one (also update datasource in prisma.config.ts):
   // PostgreSQL (production): provider = "postgresql"
   // SQLite (local testing): provider = "sqlite"
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 // Driver model for third-party freight drivers
