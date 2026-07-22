@@ -1,0 +1,43 @@
+name: Prisma Compute Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate Prisma token
+        env:
+          PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
+        run: |
+          if [ -z "$PRISMA_SERVICE_TOKEN" ]; then
+            echo "Missing GitHub secret: PRISMA_SERVICE_TOKEN"
+            exit 1
+          fi
+
+      - name: Deploy app to Prisma Compute
+        env:
+          PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
+        run: npx -y @prisma/cli@preview app deploy --app cmrvgk5c81chb03f7nhwffm9j --branch main --build-type nextjs --no-interactive --yes
