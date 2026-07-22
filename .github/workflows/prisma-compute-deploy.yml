@@ -23,6 +23,9 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -38,4 +41,4 @@ jobs:
       - name: Deploy app to Prisma Compute
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-        run: npx -y @prisma/cli@preview app deploy --app cmrvgk5c81chb03f7nhwffm9j --branch main --build-type nextjs --no-interactive --yes
+        run: bunx @prisma/cli@preview app deploy --app cmrvgk5c81chb03f7nhwffm9j --branch main --build-type nextjs --no-interactive --yes --trace
