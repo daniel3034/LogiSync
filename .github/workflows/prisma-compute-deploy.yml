@@ -1,9 +1,6 @@
 name: Prisma Compute Deploy
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -35,11 +32,15 @@ jobs:
       - name: Validate Prisma token
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-          PRISMA_PROJECT_ID: ""
-          PRISMA_APP_ID: ""
+          PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
+          PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
         run: |
           if [ -z "$PRISMA_SERVICE_TOKEN" ]; then
             echo "Missing GitHub secret: PRISMA_SERVICE_TOKEN"
+            exit 1
+          fi
+          if [ -z "$PRISMA_PROJECT_ID" ] || [ -z "$PRISMA_APP_ID" ]; then
+            echo "Missing GitHub secrets: PRISMA_PROJECT_ID and/or PRISMA_APP_ID"
             exit 1
           fi
           bunx @prisma/cli@preview auth whoami
@@ -47,15 +48,15 @@ jobs:
       - name: List visible Prisma projects
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-          PRISMA_PROJECT_ID: ""
-          PRISMA_APP_ID: ""
+          PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
+          PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
         run: bunx @prisma/cli@preview project list --trace
 
       - name: Deploy app to Prisma Compute
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-          PRISMA_PROJECT_ID: ""
-          PRISMA_APP_ID: ""
+          PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
+          PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
         run: |
           rm -rf .prisma
-          bunx @prisma/cli@preview app deploy --project LogiSync --app LogiSync --branch main --build-type nextjs --no-interactive --yes --trace
+          bunx @prisma/cli@preview app deploy --project "$PRISMA_PROJECT_ID" --app "$PRISMA_APP_ID" --branch main --build-type nextjs --no-interactive --yes --trace
