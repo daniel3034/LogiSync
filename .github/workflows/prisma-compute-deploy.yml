@@ -40,10 +40,11 @@ jobs:
             echo "Missing GitHub secret: PRISMA_SERVICE_TOKEN"
             exit 1
           fi
+          bunx @prisma/cli@preview auth whoami
 
       - name: Deploy app to Prisma Compute
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
           PRISMA_PROJECT_ID: ""
           PRISMA_APP_ID: ""
-        run: bunx @prisma/cli@preview app deploy --project my-app --app cmrvgk5c81chb03f7nhwffm9j --branch main --build-type nextjs --no-interactive --yes --trace
+        run: bunx @prisma/cli@preview app deploy --app LogiSync --branch main --build-type nextjs --no-interactive --yes --trace
