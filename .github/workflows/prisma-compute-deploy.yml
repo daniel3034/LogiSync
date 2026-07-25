@@ -44,4 +44,6 @@ jobs:
       - name: Deploy app to Prisma Compute
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-        run: bunx @prisma/cli@preview app deploy --app cmrvgk5c81chb03f7nhwffm9j --branch main --build-type nextjs --no-interactive --yes --trace
+          PRISMA_PROJECT_ID: ""
+          PRISMA_APP_ID: ""
+        run: bunx @prisma/cli@preview app deploy --project my-app --app cmrvgk5c81chb03f7nhwffm9j --branch main --build-type nextjs --no-interactive --yes --trace
