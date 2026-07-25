@@ -103,6 +103,41 @@ Server runs at `http://localhost:3000`
 - **Response:** 200 OK + Success message
 - **Errors:** 404 (not found)
 
+### **Calculate Price**
+
+- **POST** `/api/calculate-price`
+- **Body:**
+  ```json
+  {
+    "weight": 180,
+    "volume": 1.2,
+    "destination": "Guatemala City"
+  }
+  ```
+- **Response:** 200 OK
+  ```json
+  {
+    "clientCost": 279.45,
+    "driverPayment": 173.26,
+    "netMargin": 106.19,
+    "marginPercent": 38,
+    "breakdown": {
+      "baseFee": 12,
+      "billableWeightKg": 300,
+      "volumetricWeightKg": 300,
+      "destinationMultiplier": 1.25,
+      "fuelSurcharge": 20.7
+    }
+  }
+  ```
+- **Errors:** 400 (invalid weight/volume/destination)
+
+- **Formula Notes:**
+  - Billable weight = `max(weight, volume * 250)`
+  - Destination multiplier = local `1.0`, regional `1.25`, other `1.5`
+  - Fuel surcharge = `8%`
+  - Driver payment = `max(clientCost * 0.62, 15)`
+
 ---
 
 ## Testing with cURL
@@ -152,6 +187,14 @@ curl -X PUT http://localhost:3000/api/drivers/{id} \
 curl -X DELETE http://localhost:3000/api/drivers/{id}
 ```
 
+### Calculate price:
+
+```bash
+curl -X POST http://localhost:3000/api/calculate-price \
+  -H "Content-Type: application/json" \
+  -d '{"weight": 180, "volume": 1.2, "destination": "Guatemala City"}'
+```
+
 ---
 
 ## Testing with Postman
@@ -162,6 +205,8 @@ curl -X DELETE http://localhost:3000/api/drivers/{id}
    - **GET** `{{base_url}}/api/drivers/{{driver_id}}`
    - **PUT** `{{base_url}}/api/drivers/{{driver_id}}`
    - **DELETE** `{{base_url}}/api/drivers/{{driver_id}}`
+
+- **POST** `{{base_url}}/api/calculate-price`
 
 2. Set `{{base_url}}` to `http://localhost:3000`
 

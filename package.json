@@ -7,7 +7,8 @@
     "tsgo": "npx tsgo --noEmit",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:price": "node scripts/test-calculate-price.mjs"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.8.0",
