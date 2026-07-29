@@ -37,6 +37,7 @@ async function testGetShouldReturn405() {
 
 async function testValidCalculation() {
   const payload = {
+    origin: "San Salvador",
     weight: 180,
     volume: 1.2,
     destination: "Guatemala City",
@@ -46,28 +47,43 @@ async function testValidCalculation() {
 
   assert(response.status === 200, `POST should return 200, got ${response.status}`);
   assert(typeof data?.clientCost === "number", "clientCost must be a number");
-  assert(
-    typeof data?.driverPayment === "number",
-    "driverPayment must be a number"
-  );
-  assert(typeof data?.netMargin === "number", "netMargin must be a number");
-  assert(
-    typeof data?.marginPercent === "number",
-    "marginPercent must be a number"
-  );
   assert(data?.breakdown, "breakdown must be present");
+  assert(typeof data?.breakdown?.distanceKm === "number", "distanceKm must be present");
+  assert(typeof data?.breakdown?.distanceCharge === "number", "distanceCharge must be present");
 
-  const expectedNetMargin = Number((data.clientCost - data.driverPayment).toFixed(2));
+  console.log("PASS: valid POST returns client pricing with distance breakdown");
+}
+
+async function testRoutePairImpactsPrice() {
+  const basePayload = {
+    weight: 180,
+    volume: 1.2,
+    destination: "Guatemala City",
+  };
+
+  const fromSanSalvador = await request("POST", {
+    ...basePayload,
+    origin: "San Salvador",
+  });
+
+  const fromSantaAna = await request("POST", {
+    ...basePayload,
+    origin: "Santa Ana",
+  });
+
+  assert(fromSanSalvador.response.status === 200, `San Salvador origin should return 200, got ${fromSanSalvador.response.status}`);
+  assert(fromSantaAna.response.status === 200, `Santa Ana origin should return 200, got ${fromSantaAna.response.status}`);
   assert(
-    data.netMargin === expectedNetMargin,
-    `netMargin mismatch. expected ${expectedNetMargin}, got ${data.netMargin}`
+    fromSanSalvador.data.clientCost > fromSantaAna.data.clientCost,
+    `route matrix must impact price. San Salvador->Guatemala City=${fromSanSalvador.data.clientCost}, Santa Ana->Guatemala City=${fromSantaAna.data.clientCost}`
   );
 
-  console.log("PASS: valid POST returns full pricing object");
+  console.log("PASS: origin-destination route matrix impacts total price");
 }
 
 async function testInvalidWeight() {
   const { response, data } = await request("POST", {
+    origin: "San Salvador",
     weight: 0,
     volume: 1.2,
     destination: "Guatemala City",
@@ -80,6 +96,7 @@ async function testInvalidWeight() {
 
 async function testInvalidVolume() {
   const { response, data } = await request("POST", {
+    origin: "San Salvador",
     weight: 150,
     volume: -2,
     destination: "San Salvador",
@@ -90,22 +107,42 @@ async function testInvalidVolume() {
   console.log("PASS: invalid volume returns 400");
 }
 
-async function testInvalidDestination() {
+async function testInvalidOrigin() {
   const { response, data } = await request("POST", {
+    origin: "Unknown City",
     weight: 150,
     volume: 1.2,
-    destination: "",
+    destination: "Guatemala City",
   });
 
   assert(
     response.status === 400,
-    `empty destination should return 400, got ${response.status}`
+    `invalid origin should return 400, got ${response.status}`
   );
   assert(
     typeof data?.error === "string",
-    "empty destination should return error message"
+    "invalid origin should return error message"
   );
-  console.log("PASS: empty destination returns 400");
+  console.log("PASS: invalid origin returns 400");
+}
+
+async function testInvalidDestination() {
+  const { response, data } = await request("POST", {
+    origin: "San Salvador",
+    weight: 150,
+    volume: 1.2,
+    destination: "Unknown City",
+  });
+
+  assert(
+    response.status === 400,
+    `invalid destination should return 400, got ${response.status}`
+  );
+  assert(
+    typeof data?.error === "string",
+    "invalid destination should return error message"
+  );
+  console.log("PASS: invalid destination returns 400");
 }
 
 async function run() {
@@ -114,8 +151,10 @@ async function run() {
   try {
     await testGetShouldReturn405();
     await testValidCalculation();
+    await testRoutePairImpactsPrice();
     await testInvalidWeight();
     await testInvalidVolume();
+    await testInvalidOrigin();
     await testInvalidDestination();
 
     console.log("\nAll calculate-price tests passed.");

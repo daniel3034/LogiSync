@@ -35,14 +35,15 @@ model Driver {
 // Waybill model for digital shipment documentation
 model Waybill {
   id            String   @id @default(cuid())
-  driverId      String
-  driver        Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  driverId      String?
+  driver        Driver?  @relation(fields: [driverId], references: [id], onDelete: SetNull)
   
   // Shipment details
   senderName    String
   senderPhone   String
   receiverName  String
   receiverPhone String
+  origin        String
   destination   String
   weight        Float    // in kg
   volume        Float    // in m³
@@ -59,4 +60,16 @@ model Waybill {
   status        String   @default("pending") // pending, in_transit, delivered
   
   @@map("waybills")
+}
+
+model RoutePricing {
+  id          String   @id @default(cuid())
+  origin      String
+  destination String
+  multiplier  Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([origin, destination], name: "route_pricing_origin_destination_key")
+  @@map("route_pricing")
 }

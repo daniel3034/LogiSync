@@ -1,73 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
+import { calculatePricing, type PricingInput } from "@/lib/pricing";
+import { resolveDestination, resolveOrigin } from "@/lib/waybill-options";
+import { getEffectiveRouteMultiplier } from "@/lib/server/route-pricing";
 
-type PricingInput = {
-  weight: number;
-  volume: number;
-  destination: string;
-};
+// Use global to avoid creating multiple PrismaClient instances
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const VOLUMETRIC_WEIGHT_FACTOR = 250; // 1 m3 = 250 kg billable weight
-const BASE_FEE = 12;
-const KG_RATE = 0.65;
-const FUEL_SURCHARGE_RATE = 0.08;
-const DRIVER_SHARE_RATE = 0.62;
-const MIN_DRIVER_PAYMENT = 15;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
-function roundCurrency(value: number) {
-  return Number(value.toFixed(2));
-}
+const adapter = new PrismaPg(pool);
 
-function getDestinationMultiplier(destination: string) {
-  const normalized = destination.trim().toLowerCase();
+const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    adapter,
+    log:
+      process.env.NODE_ENV === "development"
+        ? ["error", "warn"]
+        : ["error"],
+  });
 
-  const localCities = ["san salvador", "santa ana", "soyapango", "apopa"];
-  const regionalCities = [
-    "guatemala city",
-    "tegucigalpa",
-    "managua",
-    "san jose",
-    "panama city",
-  ];
-
-  if (localCities.some((city) => normalized.includes(city))) {
-    return 1.0;
-  }
-
-  if (regionalCities.some((city) => normalized.includes(city))) {
-    return 1.25;
-  }
-
-  return 1.5;
-}
-
-function calculatePricing(input: PricingInput) {
-  const destinationMultiplier = getDestinationMultiplier(input.destination);
-  const volumetricWeight = input.volume * VOLUMETRIC_WEIGHT_FACTOR;
-  const billableWeight = Math.max(input.weight, volumetricWeight);
-
-  const baseCost = BASE_FEE + billableWeight * KG_RATE;
-  const destinationAdjustedCost = baseCost * destinationMultiplier;
-  const fuelSurcharge = destinationAdjustedCost * FUEL_SURCHARGE_RATE;
-
-  const clientCost = destinationAdjustedCost + fuelSurcharge;
-  const driverPayment = Math.max(clientCost * DRIVER_SHARE_RATE, MIN_DRIVER_PAYMENT);
-  const netMargin = clientCost - driverPayment;
-  const marginPercent = clientCost > 0 ? (netMargin / clientCost) * 100 : 0;
-
-  return {
-    clientCost: roundCurrency(clientCost),
-    driverPayment: roundCurrency(driverPayment),
-    netMargin: roundCurrency(netMargin),
-    marginPercent: roundCurrency(marginPercent),
-    breakdown: {
-      baseFee: roundCurrency(BASE_FEE),
-      billableWeightKg: roundCurrency(billableWeight),
-      volumetricWeightKg: roundCurrency(volumetricWeight),
-      destinationMultiplier,
-      fuelSurcharge: roundCurrency(fuelSurcharge),
-    },
-  };
-}
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 /**
  * POST /api/calculate-price
@@ -80,9 +38,17 @@ export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as Partial<PricingInput>;
 
+    const origin = body.origin?.trim();
     const weight = Number(body.weight);
     const volume = Number(body.volume);
     const destination = body.destination?.trim();
+
+    if (!origin) {
+      return NextResponse.json(
+        { error: "Invalid origin. Must be selected from the origin list." },
+        { status: 400 }
+      );
+    }
 
     if (!Number.isFinite(weight) || weight <= 0) {
       return NextResponse.json(
@@ -105,9 +71,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const pricing = calculatePricing({ weight, volume, destination });
+    const canonicalDestination = resolveDestination(destination);
+    const canonicalOrigin = resolveOrigin(origin);
 
-    return NextResponse.json(pricing, { status: 200 });
+    if (!canonicalDestination) {
+      return NextResponse.json(
+        { error: "Invalid destination. Please select one from the destination list." },
+        { status: 400 }
+      );
+    }
+
+    if (!canonicalOrigin) {
+      return NextResponse.json(
+        { error: "Invalid origin. Please select one from the origin list." },
+        { status: 400 }
+      );
+    }
+
+    const routeMultiplierOverride = await getEffectiveRouteMultiplier(
+      prisma,
+      canonicalOrigin,
+      canonicalDestination
+    );
+
+    const pricing = calculatePricing({
+      origin: canonicalOrigin,
+      weight,
+      volume,
+      destination: canonicalDestination,
+      routeMultiplierOverride,
+    });
+
+    return NextResponse.json(
+      {
+        clientCost: pricing.clientCost,
+        breakdown: pricing.breakdown,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     console.error("Error calculating price:", error);
     return NextResponse.json(
