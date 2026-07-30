@@ -94,7 +94,9 @@ export default function AdminWaybillsPage() {
 
       setDrivers(Array.isArray(driversData) ? driversData : []);
       setWaybills(Array.isArray(waybillsData) ? waybillsData : []);
-      if (!("error" in routePricingData)) {
+      // Narrow on a required key of the success shape: `error` is optional in
+      // the failure shape, so `"error" in data` cannot rule it out.
+      if ("origins" in routePricingData) {
         setOrigins(routePricingData.origins);
         setDestinations(routePricingData.destinations);
         setOverrides(routePricingData.overrides);
