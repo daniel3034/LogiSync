@@ -1,31 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { prisma } from "@/lib/prisma";
 import { calculatePricing } from "@/lib/pricing";
 import { resolveDestination, resolveOrigin } from "@/lib/waybill-options";
 import { getEffectiveRouteMultiplier } from "@/lib/server/route-pricing";
-
-// Use global to avoid creating multiple PrismaClient instances
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-const adapter = new PrismaPg(pool);
-
-const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter,
-    log:
-      process.env.NODE_ENV === "development"
-        ? ["error", "warn"]
-        : ["error"],
-  });
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 type WaybillPayload = {
   origin?: string;
@@ -158,7 +135,6 @@ export async function POST(request: NextRequest) {
     }
 
     const routeMultiplierOverride = await getEffectiveRouteMultiplier(
-      prisma,
       canonicalOrigin,
       canonicalDestination
     );

@@ -1,8 +1,7 @@
-import { PrismaClient } from "@prisma/client";
+import {prisma} from "@/lib/prisma"
 import { getRouteMultiplier } from "@/lib/waybill-options";
 
 export async function getEffectiveRouteMultiplier(
-  prisma: PrismaClient,
   origin: string,
   destination: string
 ): Promise<number> {
