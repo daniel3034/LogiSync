@@ -337,18 +337,19 @@ export default function AdminWaybillsPage() {
                 <th className="px-4 py-3 text-left font-semibold text-zinc-600">Net Margin</th>
                 <th className="px-4 py-3 text-left font-semibold text-zinc-600">Driver (Internal)</th>
                 <th className="px-4 py-3 text-left font-semibold text-zinc-600">Status</th>
+                <th className="px-4 py-3 text-left font-semibold text-zinc-600">PDF</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 bg-white">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-zinc-500">
                     Loading internal assignments...
                   </td>
                 </tr>
               ) : waybills.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-zinc-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-zinc-500">
                     No waybills found.
                   </td>
                 </tr>
@@ -400,6 +401,17 @@ export default function AdminWaybillsPage() {
                         ))}
                       </select>
                     </td>
+                    <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        window.open(`/api/waybills/${waybill.id}/pdf`, "_blank")
+                      }
+                      className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                    >
+                      Download PDF
+                    </button>
+                  </td>
                   </tr>
                 ))
               )}
