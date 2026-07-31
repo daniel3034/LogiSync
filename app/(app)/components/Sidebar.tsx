@@ -19,6 +19,8 @@ export default function Sidebar() {
 
         <Link href="/waybill">Waybills</Link>
 
+        <Link href="/admin/waybills">Admin Panel</Link>
+
       </nav>
     </aside>
   );
