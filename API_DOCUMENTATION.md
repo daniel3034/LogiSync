@@ -76,7 +76,9 @@ Server runs at `http://localhost:3000`
 
 - **GET** `/api/drivers`
 - **Query Params (optional):**
-  - `city=NewYork` - Filter by preferred city
+  - `city=New York` - Filter by preferred city. Matches whole city names only
+    (case-insensitive), so `city=York` does **not** match a driver serving
+    `New York`.
 - **Response:** 200 OK + Array of drivers
 - **Example:**
   ```
