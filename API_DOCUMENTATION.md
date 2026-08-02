@@ -52,6 +52,11 @@ Server runs at `http://localhost:3000`
 
 ## API Endpoints
 
+> **All `/api/drivers` endpoints require an authenticated `ADMIN` user.** Requests
+> without a session get `401 Unauthorized`; authenticated non-admins get
+> `403 Forbidden`. Sign in at `/login` (see `scripts/seed-admin.mjs` for creating
+> the first admin).
+
 ### **Create Driver**
 
 - **POST** `/api/drivers`

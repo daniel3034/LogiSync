@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -8,6 +9,9 @@ import { prisma } from "@/lib/prisma";
  *   - city: Filter drivers by preferred city (optional)
  */
 export async function GET(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const city = searchParams.get("city");
@@ -51,6 +55,9 @@ export async function GET(request: NextRequest) {
  *   - preferredCities: string (required, comma-separated cities)
  */
 export async function POST(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { name, phone, truckSize, preferredCities } = body;
