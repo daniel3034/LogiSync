@@ -52,6 +52,11 @@ Server runs at `http://localhost:3000`
 
 ## API Endpoints
 
+> **All `/api/drivers` endpoints require an authenticated `ADMIN` user.** Requests
+> without a session get `401 Unauthorized`; authenticated non-admins get
+> `403 Forbidden`. Sign in at `/login` (see `scripts/seed-admin.mjs` for creating
+> the first admin).
+
 ### **Create Driver**
 
 - **POST** `/api/drivers`
@@ -71,7 +76,9 @@ Server runs at `http://localhost:3000`
 
 - **GET** `/api/drivers`
 - **Query Params (optional):**
-  - `city=NewYork` - Filter by preferred city
+  - `city=New York` - Filter by preferred city. Matches whole city names only
+    (case-insensitive), so `city=York` does **not** match a driver serving
+    `New York`.
 - **Response:** 200 OK + Array of drivers
 - **Example:**
   ```

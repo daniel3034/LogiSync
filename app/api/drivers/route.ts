@@ -1,35 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
+import { matchesCity } from "@/lib/cities";
 import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/drivers
- * Fetch all drivers with optional city filter
+ * Fetch all drivers with optional city filter. ADMIN only.
  * Query params:
- *   - city: Filter drivers by preferred city (optional)
+ *   - city: Filter drivers by preferred city (optional, whole-city match)
  */
 export async function GET(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
-    const city = searchParams.get("city");
+    const city = searchParams.get("city")?.trim() ?? "";
 
-    let drivers;
+    // `contains` is only a prefilter over the comma-separated column; the exact
+    // whole-city match happens in `matchesCity`. See lib/cities.ts.
+    const candidates = await prisma.driver.findMany({
+      where: city
+        ? { preferredCities: { contains: city, mode: "insensitive" } }
+        : undefined,
+      orderBy: { createdAt: "desc" },
+    });
 
-    if (city) {
-      // Filter drivers by city (case-insensitive, partial match)
-      drivers = await prisma.driver.findMany({
-        where: {
-          preferredCities: {
-            contains: city,
-            mode: "insensitive",
-          },
-        },
-      });
-    } else {
-      // Fetch all drivers
-      drivers = await prisma.driver.findMany({
-        orderBy: { createdAt: "desc" },
-      });
-    }
+    const drivers = city
+      ? candidates.filter((driver) => matchesCity(driver.preferredCities, city))
+      : candidates;
 
     return NextResponse.json(drivers, { status: 200 });
   } catch (error) {
@@ -51,6 +50,9 @@ export async function GET(request: NextRequest) {
  *   - preferredCities: string (required, comma-separated cities)
  */
 export async function POST(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { name, phone, truckSize, preferredCities } = body;

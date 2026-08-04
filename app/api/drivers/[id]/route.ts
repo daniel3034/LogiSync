@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -9,6 +10,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -40,6 +44,9 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -91,6 +98,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
