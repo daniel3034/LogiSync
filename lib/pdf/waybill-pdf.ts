@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import QRCode from "qrcode";
 
 type Driver = {
   name: string;
@@ -25,7 +26,14 @@ type WaybillData = {
   driver: Driver;
 };
 
-export async function generateWaybillPdf(waybill: WaybillData) {
+type WaybillPdfOptions = {
+  verificationUrl?: string;
+};
+
+export async function generateWaybillPdf(
+  waybill: WaybillData,
+  options: WaybillPdfOptions = {}
+) {
   const pdfDoc = await PDFDocument.create();
 
   const page = pdfDoc.addPage([595, 842]); // A4
@@ -46,6 +54,30 @@ export async function generateWaybillPdf(waybill: WaybillData) {
     y: 775,
     size: 16,
     font,
+  });
+
+  const qrValue = options.verificationUrl || waybill.id;
+  const qrDataUrl = await QRCode.toDataURL(qrValue, {
+    errorCorrectionLevel: "M",
+    margin: 1,
+    width: 180,
+  });
+  const qrImage = await pdfDoc.embedPng(qrDataUrl);
+  const qrSize = 115;
+
+  page.drawImage(qrImage, {
+    x: 430,
+    y: 650,
+    width: qrSize,
+    height: qrSize,
+  });
+
+  page.drawText("Scan to verify", {
+    x: 438,
+    y: 638,
+    size: 10,
+    font,
+    color: rgb(0.2, 0.2, 0.2),
   });
 
   let y = 730;

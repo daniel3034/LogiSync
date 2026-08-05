@@ -1,6 +1,11 @@
 import type { Role } from "@prisma/client";
 import type { NextAuthConfig } from "next-auth";
 
+const devFallbackSecret =
+  process.env.NODE_ENV === "development"
+    ? "logisync-dev-auth-secret-change-me"
+    : undefined;
+
 /**
  * Edge-safe Auth.js configuration.
  *
@@ -9,6 +14,7 @@ import type { NextAuthConfig } from "next-auth";
  * in `auth.ts` instead.
  */
 export const authConfig = {
+  secret: process.env.AUTH_SECRET || devFallbackSecret,
   pages: {
     signIn: "/login",
   },

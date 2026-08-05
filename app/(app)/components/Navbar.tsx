@@ -1,9 +1,41 @@
-export default function Navbar() {
+import Link from "next/link";
+
+type NavbarProps = {
+  isAdmin: boolean;
+};
+
+export default function Navbar({ isAdmin }: NavbarProps) {
   return (
-    <header className="w-full h-16 bg-white shadow flex items-center px-6">
-      <h1 className="text-xl font-bold text-blue-700">
-        LogiSync
-      </h1>
+    <header className="w-full border-b border-zinc-200 bg-white px-4 py-3 shadow-sm sm:px-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold text-blue-700">LogiSync</h1>
+        <p className="hidden text-sm text-zinc-600 sm:block">Shipment operations hub</p>
+      </div>
+
+      <nav className="mt-3 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+        <Link href="/dashboard" className="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-800">
+          Dashboard
+        </Link>
+        <Link href="/waybill" className="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-800">
+          Waybills
+        </Link>
+        <Link href="/routes" className="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-800">
+          Routes
+        </Link>
+        <Link href="/calculator" className="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-800">
+          Calculator
+        </Link>
+        {isAdmin ? (
+          <>
+            <Link href="/drivers" className="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-800">
+              Drivers
+            </Link>
+            <Link href="/admin/waybills" className="whitespace-nowrap rounded-full bg-zinc-100 px-3 py-1.5 text-xs font-semibold text-zinc-800">
+              Admin
+            </Link>
+          </>
+        ) : null}
+      </nav>
     </header>
   );
 }

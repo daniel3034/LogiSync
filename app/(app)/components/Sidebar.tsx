@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { auth } from "@/auth";
 
-export default async function Sidebar() {
-  const session = await auth();
-  const isAdmin = session?.user.role === "ADMIN";
+type SidebarProps = {
+  isAdmin: boolean;
+};
+
+export default function Sidebar({ isAdmin }: SidebarProps) {
 
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen p-6">
+    <aside className="h-full min-h-screen bg-slate-900 p-6 text-white">
       <h2 className="text-2xl font-bold mb-8">
         LogiSync
       </h2>

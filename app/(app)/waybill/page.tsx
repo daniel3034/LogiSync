@@ -300,12 +300,12 @@ export default function WaybillPage() {
 						</p>
 					)}
 
-					<div className="mt-6 flex flex-wrap items-center gap-3">
+					<div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
 						<button
 							type="button"
 							onClick={calculatePrice}
 							disabled={isCalculating}
-							className="rounded-lg border border-blue-700 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70"
+							className="w-full rounded-lg border border-blue-700 px-4 py-2 text-sm font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 						>
 							{isCalculating ? "Calculating..." : "Calculate Pricing"}
 						</button>
@@ -313,7 +313,7 @@ export default function WaybillPage() {
 						<button
 							type="submit"
 							disabled={isSubmitting}
-							className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70"
+							className="w-full rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
 						>
 							{isSubmitting ? "Saving..." : "Create Waybill"}
 						</button>

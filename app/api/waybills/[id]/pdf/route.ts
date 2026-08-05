@@ -23,7 +23,14 @@ export async function GET(
       );
     }
 
-   const pdfBytes = await generateWaybillPdf(waybill);
+    const verificationUrl = new URL(
+      `/api/waybills/${waybill.id}`,
+      request.nextUrl.origin
+    ).toString();
+
+    const pdfBytes = await generateWaybillPdf(waybill, {
+      verificationUrl,
+    });
 
 
     const arrayBuffer = new Uint8Array(pdfBytes).buffer;
