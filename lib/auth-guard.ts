@@ -28,6 +28,25 @@ export async function requireAdmin(callbackUrl?: string): Promise<Session> {
 }
 
 /**
+ * Server Action guard: resolves to the session for an ADMIN, or to `null`.
+ *
+ * Actions can't redirect the way a page does or return a `NextResponse` the way
+ * a route handler does, so the caller turns `null` into whatever its own error
+ * state looks like. A Server Action is a POST endpoint that anyone can reach
+ * directly, so rendering the form behind `requireAdmin` is not a substitute for
+ * calling this.
+ */
+export async function getAdminSession(): Promise<Session | null> {
+  const session = await auth();
+
+  if (!session?.user || session.user.role !== "ADMIN") {
+    return null;
+  }
+
+  return session;
+}
+
+/**
  * Route handler guard: resolves to `null` when the caller is an ADMIN, or to the
  * error response the handler should return.
  *
