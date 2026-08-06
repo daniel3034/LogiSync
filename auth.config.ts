@@ -1,20 +1,26 @@
 import type { Role } from "@prisma/client";
 import type { NextAuthConfig } from "next-auth";
 
-const devFallbackSecret =
-  process.env.NODE_ENV === "development"
-    ? "logisync-dev-auth-secret-change-me"
-    : undefined;
+// Shared by `proxy.ts` and `auth.ts`, so one check covers every runtime.
+// `NEXT_PHASE` exemption keeps `pnpm build` working on hosts that inject
+// secrets only at runtime.
+if (
+  !process.env.AUTH_SECRET &&
+  process.env.NEXT_PHASE !== "phase-production-build"
+) {
+  throw new Error(
+    "AUTH_SECRET is not set. Run `npx auth secret`, or `pnpm dev` to generate one into .env.local. See README.md."
+  );
+}
 
 /**
- * Edge-safe Auth.js configuration.
+ * Shared Auth.js configuration.
  *
  * This file must not import Prisma, `pg`, or bcrypt: it is loaded by `proxy.ts`,
  * which runs on every matched request. Providers that need database access live
  * in `auth.ts` instead.
  */
 export const authConfig = {
-  secret: process.env.AUTH_SECRET || devFallbackSecret,
   pages: {
     signIn: "/login",
   },
