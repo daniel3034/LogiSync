@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth-guard";
 import { collectCities, matchesCity, parseCities } from "@/lib/cities";
 import { prisma } from "@/lib/prisma";
+import AddDriverForm from "./AddDriverForm";
 import CityFilter from "./CityFilter";
 
 export default async function DriversPage({
@@ -40,6 +41,10 @@ export default async function DriversPage({
       <p className="mt-2 text-sm text-zinc-600">
         Manage third-party drivers and their preferred service areas.
       </p>
+
+      <div className="mt-6">
+        <AddDriverForm />
+      </div>
 
       <div className="mt-6">
         <CityFilter cities={cities} selectedCity={selectedCity} />
