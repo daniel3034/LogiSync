@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import {
   SERVICE_DESTINATIONS,
@@ -19,6 +20,9 @@ type RoutePricingPayload = {
  * Returns explicit DB overrides and route metadata.
  */
 export async function GET() {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const overrides = await prisma.routePricing.findMany({
       orderBy: [{ origin: "asc" }, { destination: "asc" }],
@@ -60,6 +64,9 @@ export async function GET() {
  * Upsert a route-specific pricing multiplier override.
  */
 export async function PUT(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const body = (await request.json()) as RoutePricingPayload;
     const origin = body.origin?.trim();
@@ -129,6 +136,9 @@ export async function PUT(request: NextRequest) {
  * Deletes an existing route-specific override.
  */
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const origin = searchParams.get("origin")?.trim();
