@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import DownloadWaybillPdfButton from "../components/DownloadWaybillPdfButton";
 
 type Waybill = {
 	id: string;
@@ -124,25 +125,26 @@ export default function DashboardClient() {
 								<th className="px-4 py-3 text-left font-semibold text-zinc-600">Route</th>
 								<th className="px-4 py-3 text-left font-semibold text-zinc-600">Status</th>
 								<th className="px-4 py-3 text-left font-semibold text-zinc-600">Total Amount</th>
+								<th className="px-4 py-3 text-left font-semibold text-zinc-600">PDF</th>
 							</tr>
 						</thead>
 
 						<tbody className="divide-y divide-zinc-100 bg-white">
 							{isLoading ? (
 								<tr>
-									<td colSpan={4} className="px-4 py-8 text-center text-zinc-500">
+									<td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
 										Loading waybills...
 									</td>
 								</tr>
 							) : error ? (
 								<tr>
-									<td colSpan={4} className="px-4 py-8 text-center text-red-600">
+									<td colSpan={5} className="px-4 py-8 text-center text-red-600">
 										{error}
 									</td>
 								</tr>
 							) : waybills.length === 0 ? (
 								<tr>
-									<td colSpan={4} className="px-4 py-8 text-center text-zinc-500">
+									<td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
 										No waybills found. Create one in the waybill form.
 									</td>
 								</tr>
@@ -163,6 +165,9 @@ export default function DashboardClient() {
 											</span>
 										</td>
 										<td className="px-4 py-3 font-medium text-zinc-800">{formatMoney(waybill.clientCost)}</td>
+										<td className="px-4 py-3">
+											<DownloadWaybillPdfButton waybillId={waybill.id} />
+										</td>
 									</tr>
 								))
 							)}

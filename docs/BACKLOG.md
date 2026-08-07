@@ -33,6 +33,7 @@ Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is
 - **Extend the page guard beyond /drivers** — `proxy.ts` matcher covers the app group; server `page.tsx` wrappers call `requireAdmin` / `requireSession`.
 - **Auth Setup Ownership Needed** — per-machine `AUTH_SECRET` via `scripts/ensure-auth-secret.mjs`, no committed fallback, setup docs in README.
 - **Setup and demo documentation** — README covers env vars, migrate, seed:admin, AUTH_SECRET local vs production, and the demo path.
+- **PDF download from the dashboard and after creation** — DownloadWaybillPdfButton on each dashboard row (app/(app)/dashboard/DashboardClient.tsx) and on the waybill-created success state (app/(app)/waybill/WaybillClient.tsx); shared control also used by /admin/waybills.
 
 ---
 
@@ -91,17 +92,6 @@ Return them from the endpoint and render them on the calculator.
 - An admin sees client cost, driver payment, and margin percent before confirming a trip.
 
 **Depends on:** "Wire the calculator to the real pricing engine".
-
-### PDF download from the dashboard and after creation
-
-Enhancement user story: *As an admin, I want to click a button to download the waybill as a clean PDF file optimized for mobile screens.*
-
-The PDF endpoint works (app/api/waybills/[id]/pdf/route.ts) but the only button that reaches it is on /admin/waybills (app/(app)/admin/waybills/page.tsx:408). An admin creating a waybill has no way to download it.
-
-Add a download button to each dashboard row and to the waybill-created success state.
-
-**Acceptance**
-- An admin can download a waybill PDF without visiting the admin panel.
 
 ### Waybill detail page
 

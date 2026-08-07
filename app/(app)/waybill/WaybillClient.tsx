@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import DownloadWaybillPdfButton from "../components/DownloadWaybillPdfButton";
 import {
 	SERVICE_DESTINATIONS,
 	SERVICE_ORIGINS,
@@ -60,6 +61,7 @@ export default function WaybillClient() {
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [formError, setFormError] = useState<string | null>(null);
 	const [successMessage, setSuccessMessage] = useState<string | null>(null);
+	const [createdWaybillId, setCreatedWaybillId] = useState<string | null>(null);
 
 	const handleChange = (field: keyof WaybillForm, value: string) => {
 		setForm((current) => ({
@@ -71,6 +73,7 @@ export default function WaybillClient() {
 	const calculatePrice = async () => {
 		setFormError(null);
 		setSuccessMessage(null);
+		setCreatedWaybillId(null);
 
 		const weight = Number(form.weight);
 		const volume = Number(form.volume);
@@ -123,6 +126,7 @@ export default function WaybillClient() {
 		event.preventDefault();
 		setFormError(null);
 		setSuccessMessage(null);
+		setCreatedWaybillId(null);
 
 		setIsSubmitting(true);
 
@@ -144,6 +148,7 @@ export default function WaybillClient() {
 			}
 
 			setSuccessMessage(`Waybill ${data.id || ""} created successfully.`.trim());
+			setCreatedWaybillId(data.id ?? null);
 			setForm(initialForm);
 			setPricing(null);
 		} catch (error) {
@@ -295,9 +300,18 @@ export default function WaybillClient() {
 
 					{formError && <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{formError}</p>}
 					{successMessage && (
-						<p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-							{successMessage} Visit <Link href="/dashboard" className="font-semibold underline">dashboard</Link>.
-						</p>
+						<div className="mt-4 flex flex-col gap-3 rounded-lg bg-emerald-50 px-3 py-3 text-sm text-emerald-700 sm:flex-row sm:items-center sm:justify-between">
+							<p>
+								{successMessage} Visit{" "}
+								<Link href="/dashboard" className="font-semibold underline">
+									dashboard
+								</Link>
+								.
+							</p>
+							{createdWaybillId && (
+								<DownloadWaybillPdfButton waybillId={createdWaybillId} size="md" />
+							)}
+						</div>
 					)}
 
 					<div className="mt-6 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
