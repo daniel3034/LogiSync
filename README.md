@@ -2,6 +2,10 @@
 
 LogiSync: Simple Web App for Freight and Digital Waybills
 
+## Public Site: [Logisync](https://logisync-bsyr.onrender.com/)
+
+## Quotes
+
 "First, solve the problem. Then, write the code." Author: John Johnson (Daniel Holguin Quote)
 
 “Some infinities are bigger than other infinities.”
