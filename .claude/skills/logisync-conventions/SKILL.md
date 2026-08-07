@@ -70,4 +70,4 @@ const { city } = await searchParams;
 
 ## Testing reality
 
-There is no test framework — no jest, no vitest. The only automated check is `scripts/test-calculate-price.mjs`, a hand-rolled integration script that `fetch`es a running dev server. It is unauthenticated, so it will break when `/api/calculate-price` gets its auth guard. Treat "tests pass" claims accordingly, and verify changes by running the app.
+There is no test framework — no jest, no vitest. The only automated check is `scripts/test-calculate-price.mjs`, a hand-rolled integration script that `fetch`es a running dev server. It signs in as ADMIN (via `ADMIN_EMAIL` / `ADMIN_PASSWORD`) before hitting `/api/calculate-price`, and asserts that an unauthenticated POST returns 401. Treat "tests pass" claims accordingly, and verify changes by running the app.

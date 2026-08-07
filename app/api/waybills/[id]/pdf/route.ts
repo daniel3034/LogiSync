@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { generateWaybillPdf } from "@/lib/pdf/waybill-pdf";
 
@@ -6,6 +7,9 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { id } = await params;
 
@@ -23,23 +27,23 @@ export async function GET(
       );
     }
 
+    const origin = process.env.APP_URL ?? request.nextUrl.origin;
     const verificationUrl = new URL(
-      `/api/waybills/${waybill.id}`,
-      request.nextUrl.origin
+      `/verify/${waybill.id}`,
+      origin
     ).toString();
 
     const pdfBytes = await generateWaybillPdf(waybill, {
       verificationUrl,
     });
 
-
     const arrayBuffer = new Uint8Array(pdfBytes).buffer;
 
     return new NextResponse(arrayBuffer, {
-    headers: {
+      headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="waybill-${waybill.id}.pdf"`,
-    },
+      },
     });
   } catch (error) {
     console.error("Error generating PDF:", error);

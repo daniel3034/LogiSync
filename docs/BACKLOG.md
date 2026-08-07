@@ -10,24 +10,16 @@ The board had drifted from the codebase in both directions: three cards sat in "
 
 - **Core Requirement 1 (Driver Management Directory) has no UI.** The CRUD endpoints exist and are properly guarded; nothing in the browser calls `POST` or `PUT`. Drivers can only be created by writing to the database.
 - **Core Requirement 3 (Freight Price Calculator) is faked in the UI.** `lib/pricing.ts` is correct and tested, but `app/(app)/calculator/page.tsx` returns `Math.random()` and `/api/calculate-price` discards `driverPayment`, `netMargin`, and `marginPercent` before responding.
-- **Only `/api/drivers/*` is authenticated.** Six other endpoints are open, including `/api/admin/waybills`, which returns every shipment's financials to anyone.
 
 ## Critical path to a working demo
 
-Sprint 4 holds 16 cards, which is more than one sprint. If you have to cut, these four are what actually gate a demo:
+Sprint 4 holds several cards. If you have to cut, these three are what actually gate a demo:
 
 1. **Wire the calculator to the real pricing engine** — otherwise the headline feature is a random number generator.
-2. **Require ADMIN on every waybill, pricing, and PDF endpoint** — the financial leak.
-3. **Public QR verification page** — must ship with #2, see below.
-4. **Add / edit a driver from the web UI** — otherwise Core Requirement 1 cannot be demonstrated.
+2. **Add / edit a driver from the web UI** — otherwise Core Requirement 1 cannot be demonstrated.
+3. **Show driver payment and net margin** — the pricing engine already returns them; the API still strips them.
 
-The rest is visible polish; nothing breaks without it.
-
-## Ordering hazards
-
-**"Require ADMIN…" and "Public QR verification page" must ship together.** The PDF's QR encodes `/api/waybills/:id`. Guarding that endpoint without first repointing the QR silently breaks the scan target on every waybill already printed — the failure appears on paper, not in CI.
-
-**"Require ADMIN…" will break `pnpm test:price`.** `scripts/test-calculate-price.mjs` posts to `/api/calculate-price` over plain `fetch` with no session. Once that endpoint is guarded, every assertion returns 401. Update the script in the same change, or it looks like the pricing engine regressed.
+Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is done — see Done below.
 
 ---
 
@@ -36,6 +28,11 @@ The rest is visible polish; nothing breaks without it.
 - **Create the database tables for waybills** — Waybill model exists in prisma/schema.prisma with the Driver relation; applied by prisma/migrations/20260721000000_init_postgres/migration.sql.
 - **Destination City City Filter** — Admin-only driver page with destination filter is complete: app/(app)/drivers/page.tsx, CityFilter.tsx, whole-token matching in lib/cities.ts, requireAdmin() enforcement.
 - **Digital Waybill Creator** — Acceptance criteria met by app/(app)/waybill/page.tsx against app/api/waybills/route.ts: validation, API error handling, successful creation, mobile-usable.
+- **Require ADMIN on every waybill, pricing, and PDF endpoint** — `requireAdminApi()` on `/api/waybills`, `/api/waybills/[id]`, `/api/admin/waybills`, `/api/admin/route-pricing`, `/api/calculate-price`, and `/api/waybills/[id]/pdf`.
+- **Public QR verification page** — public `/verify/[id]` shows cargo data only; PDF QR points at it via `APP_URL`.
+- **Extend the page guard beyond /drivers** — `proxy.ts` matcher covers the app group; server `page.tsx` wrappers call `requireAdmin` / `requireSession`.
+- **Auth Setup Ownership Needed** — per-machine `AUTH_SECRET` via `scripts/ensure-auth-secret.mjs`, no committed fallback, setup docs in README.
+- **Setup and demo documentation** — README covers env vars, migrate, seed:admin, AUTH_SECRET local vs production, and the demo path.
 
 ---
 
@@ -88,60 +85,12 @@ Core Requirement 3, user story "Margin View": *As a business owner, I want to se
 
 Return them from the endpoint and render them on the calculator.
 
-**Note:** this is internal financial data. Ship it together with "Require ADMIN on every waybill, pricing, and PDF endpoint" so the endpoint is admin-only first.
+**Note:** this is internal financial data. The calculate-price endpoint is already admin-guarded.
 
 **Acceptance**
 - An admin sees client cost, driver payment, and margin percent before confirming a trip.
 
 **Depends on:** "Wire the calculator to the real pricing engine".
-
-### Require ADMIN on every waybill, pricing, and PDF endpoint
-
-Only app/api/drivers/* calls `requireAdminApi()`. Unauthenticated today:
-
-- `/api/waybills` (GET and POST)
-- `/api/waybills/[id]` (GET and PUT)
-- `/api/admin/waybills`
-- `/api/admin/route-pricing`
-- `/api/calculate-price`
-- `/api/waybills/[id]/pdf`
-
-`/api/admin/waybills` returns full financials — `driverPayment` and `netMargin` for every shipment — to anyone who requests it, signed in or not.
-
-Apply the existing `requireAdminApi()` guard from lib/auth-guard.ts to each, following the pattern already used in app/api/drivers/route.ts.
-
-**Acceptance**
-- Every endpoint above returns 401 signed-out and 403 as a DRIVER.
-- The app still works end to end signed in as ADMIN.
-
-**Ship with:** "Public QR verification page" — guarding /api/waybills/[id] without repointing the QR first breaks every printed waybill's scan target.
-
-### Extend the page guard beyond /drivers
-
-proxy.ts matches only `/drivers/:path*`. /dashboard, /waybill, /calculator, and /admin/waybills all render for signed-out visitors.
-
-Extend the matcher and add `requireAdmin()` next to the data in each page, matching the pattern app/(app)/drivers/page.tsx already uses (optimistic check in the proxy, authoritative check next to the data).
-
-**Acceptance**
-- Signed out, every app page redirects to /login with a working `callbackUrl`.
-- Signed in as DRIVER, admin-only pages redirect to /dashboard.
-
-### Public QR verification page
-
-Enhancement user story: *As a warehouse worker, I want to scan the QR code on the PDF using my smartphone to instantly verify cargo data on the web.*
-
-The PDF's QR currently encodes `/api/waybills/:id` (app/api/waybills/[id]/pdf/route.ts:26-29). Scanning it returns raw JSON including `driverPayment` and `netMargin`. Two problems:
-
-1. It exposes internal financials to anyone holding a printed waybill.
-2. Once /api/waybills/[id] is admin-guarded, **the QR stops working entirely**.
-
-Build a public `/verify/[id]` page showing cargo data only — sender, receiver, route, weight, volume, status, driver name — with no financials, and point the QR at it. This route stays deliberately outside the auth guard.
-
-**Acceptance**
-- Scanning a printed waybill on a phone with no session shows a readable verification page.
-- No financial figure appears anywhere on it.
-
-**Ship with:** "Require ADMIN on every waybill, pricing, and PDF endpoint".
 
 ### PDF download from the dashboard and after creation
 
@@ -204,23 +153,6 @@ Rebuild it to show real origin→destination pairs with their distance and effec
 - Every row corresponds to a route the system can actually price.
 - Admin overrides set in /admin/waybills are reflected here.
 
-### Setup and demo documentation
-
-README.md currently contains only the project tagline and the team's four favourite quotes — no setup steps at all. A teammate or grader cloning the repo cannot run it.
-
-The existing "Auth Setup Ownership Needed" card explicitly asks for "brief setup docs for the team".
-
-Document:
-- env vars, from .env.example (DATABASE_URL, AUTH_SECRET, ADMIN_*)
-- database setup and `prisma migrate deploy`
-- admin seeding via `pnpm seed:admin`
-- demo seeding via `pnpm seed:demo`
-- running the dev server
-- a short demo script: sign in → add a driver → filter by city → calculate a price → create a waybill → assign a driver → download the PDF → scan the QR
-
-**Acceptance**
-- Someone with only the repo and a Postgres URL can reach a working demo from the README alone.
-
 ### Mobile browser test pass
 
 Sprint 4 milestone: "test everything on mobile browsers".
@@ -241,14 +173,6 @@ Log each defect found as its own card in Fixes.
 ---
 
 ## Fixes
-
-### Sidebar shows "Admin Panel" to every user
-
-app/(app)/components/Sidebar.tsx gates the Drivers link on `isAdmin` but renders the Admin Panel link unconditionally. A non-admin sees a link that bounces them straight back to /dashboard.
-
-Cosmetic only — access is correctly enforced in proxy.ts and requireAdmin() — but visible in a demo.
-
-**Fix:** gate the Admin Panel link on `isAdmin`, matching the Drivers link and the equivalent block in Navbar.tsx (which already does this correctly).
 
 ### No way to delete a driver from the UI
 

@@ -1,5 +1,10 @@
+import "dotenv/config";
+
 const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 const ENDPOINT = `${BASE_URL}/api/calculate-price`;
+
+/** Cookie jar shared across authenticated requests in this script. */
+let sessionCookieHeader = "";
 
 function assert(condition, message) {
   if (!condition) {
@@ -7,12 +12,106 @@ function assert(condition, message) {
   }
 }
 
-async function request(method, body) {
+function mergeSetCookie(existing, setCookieHeaders) {
+  const jar = new Map();
+
+  for (const pair of existing.split(";").map((part) => part.trim()).filter(Boolean)) {
+    const eq = pair.indexOf("=");
+    if (eq === -1) continue;
+    jar.set(pair.slice(0, eq), pair.slice(eq + 1));
+  }
+
+  for (const header of setCookieHeaders) {
+    const first = header.split(";")[0];
+    const eq = first.indexOf("=");
+    if (eq === -1) continue;
+    jar.set(first.slice(0, eq).trim(), first.slice(eq + 1).trim());
+  }
+
+  return [...jar.entries()].map(([name, value]) => `${name}=${value}`).join("; ");
+}
+
+function getSetCookieHeaders(response) {
+  if (typeof response.headers.getSetCookie === "function") {
+    return response.headers.getSetCookie();
+  }
+  const single = response.headers.get("set-cookie");
+  return single ? [single] : [];
+}
+
+/**
+ * Sign in as ADMIN via Auth.js credentials callback so subsequent requests
+ * carry a session cookie. Requires ADMIN_EMAIL and ADMIN_PASSWORD in the env.
+ */
+async function signInAsAdmin() {
+  const email = process.env.ADMIN_EMAIL?.trim();
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    throw new Error(
+      "Set ADMIN_EMAIL and ADMIN_PASSWORD to run authenticated pricing tests."
+    );
+  }
+
+  const csrfResponse = await fetch(`${BASE_URL}/api/auth/csrf`);
+  assert(csrfResponse.ok, `CSRF fetch failed with ${csrfResponse.status}`);
+  const csrfData = await csrfResponse.json();
+  assert(typeof csrfData?.csrfToken === "string", "csrfToken missing from /api/auth/csrf");
+
+  sessionCookieHeader = mergeSetCookie(
+    sessionCookieHeader,
+    getSetCookieHeaders(csrfResponse)
+  );
+
+  const body = new URLSearchParams({
+    csrfToken: csrfData.csrfToken,
+    email,
+    password,
+    redirect: "false",
+    callbackUrl: `${BASE_URL}/dashboard`,
+  });
+
+  const signInResponse = await fetch(
+    `${BASE_URL}/api/auth/callback/credentials`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Cookie: sessionCookieHeader,
+        "X-Auth-Return-Redirect": "1",
+      },
+      body,
+      redirect: "manual",
+    }
+  );
+
+  sessionCookieHeader = mergeSetCookie(
+    sessionCookieHeader,
+    getSetCookieHeaders(signInResponse)
+  );
+
+  const hasSession = /(?:^|;\s)(?:__Secure-)?authjs\.session-token=/.test(
+    sessionCookieHeader
+  );
+  assert(
+    hasSession,
+    `Sign-in did not return an authjs.session-token cookie (status ${signInResponse.status}). Check ADMIN_EMAIL / ADMIN_PASSWORD.`
+  );
+
+  console.log("Signed in as ADMIN for pricing tests.");
+}
+
+async function request(method, body, { authenticated = true } = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (authenticated && sessionCookieHeader) {
+    headers.Cookie = sessionCookieHeader;
+  }
+
   const response = await fetch(ENDPOINT, {
     method,
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
 
@@ -24,6 +123,25 @@ async function request(method, body) {
   }
 
   return { response, data };
+}
+
+async function testUnauthenticatedReturns401() {
+  const { response } = await request(
+    "POST",
+    {
+      origin: "San Salvador",
+      weight: 180,
+      volume: 1.2,
+      destination: "Guatemala City",
+    },
+    { authenticated: false }
+  );
+
+  assert(
+    response.status === 401,
+    `unauthenticated POST should return 401, got ${response.status}`
+  );
+  console.log("PASS: unauthenticated POST returns 401");
 }
 
 async function testGetShouldReturn405() {
@@ -149,6 +267,8 @@ async function run() {
   console.log(`Running calculate-price tests against ${ENDPOINT}`);
 
   try {
+    await testUnauthenticatedReturns401();
+    await signInAsAdmin();
     await testGetShouldReturn405();
     await testValidCalculation();
     await testRoutePairImpactsPrice();
