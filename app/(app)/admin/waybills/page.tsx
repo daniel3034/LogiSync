@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import DownloadWaybillPdfButton from "../../components/DownloadWaybillPdfButton";
 import { getRouteMultiplier } from "@/lib/waybill-options";
 
 type Driver = {
@@ -402,16 +403,8 @@ export default function AdminWaybillsPage() {
                       </select>
                     </td>
                     <td className="px-4 py-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        window.open(`/api/waybills/${waybill.id}/pdf`, "_blank")
-                      }
-                      className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
-                    >
-                      Download PDF
-                    </button>
-                  </td>
+                      <DownloadWaybillPdfButton waybillId={waybill.id} />
+                    </td>
                   </tr>
                 ))
               )}
