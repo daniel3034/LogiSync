@@ -36,6 +36,7 @@ The rest is visible polish; nothing breaks without it.
 - **Create the database tables for waybills** — Waybill model exists in prisma/schema.prisma with the Driver relation; applied by prisma/migrations/20260721000000_init_postgres/migration.sql.
 - **Destination City City Filter** — Admin-only driver page with destination filter is complete: app/(app)/drivers/page.tsx, CityFilter.tsx, whole-token matching in lib/cities.ts, requireAdmin() enforcement.
 - **Digital Waybill Creator** — Acceptance criteria met by app/(app)/waybill/page.tsx against app/api/waybills/route.ts: validation, API error handling, successful creation, mobile-usable.
+- **PDF download from the dashboard and after creation** — DownloadWaybillPdfButton on each dashboard row (app/(app)/dashboard/page.tsx) and on the waybill-created success state (app/(app)/waybill/page.tsx); shared control also used by /admin/waybills.
 
 ---
 
@@ -142,17 +143,6 @@ Build a public `/verify/[id]` page showing cargo data only — sender, receiver,
 - No financial figure appears anywhere on it.
 
 **Ship with:** "Require ADMIN on every waybill, pricing, and PDF endpoint".
-
-### PDF download from the dashboard and after creation
-
-Enhancement user story: *As an admin, I want to click a button to download the waybill as a clean PDF file optimized for mobile screens.*
-
-The PDF endpoint works (app/api/waybills/[id]/pdf/route.ts) but the only button that reaches it is on /admin/waybills (app/(app)/admin/waybills/page.tsx:408). An admin creating a waybill has no way to download it.
-
-Add a download button to each dashboard row and to the waybill-created success state.
-
-**Acceptance**
-- An admin can download a waybill PDF without visiting the admin panel.
 
 ### Waybill detail page
 
