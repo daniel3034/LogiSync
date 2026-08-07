@@ -31,6 +31,14 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 try {
   const passwordHash = await bcrypt.hash(password, 12);
+  const existing = await prisma.user.findUnique({ where: { email } });
+
+  if (existing) {
+    console.warn(
+      `WARNING: Updating existing user ${email} (was role=${existing.role}). ` +
+        "This promotes them to ADMIN and resets their password."
+    );
+  }
 
   const user = await prisma.user.upsert({
     where: { email },

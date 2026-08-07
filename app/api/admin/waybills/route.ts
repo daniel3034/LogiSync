@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -6,6 +7,9 @@ import { prisma } from "@/lib/prisma";
  * Internal endpoint with full waybill financial and assignment details.
  */
 export async function GET() {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const waybills = await prisma.waybill.findMany({
       include: {

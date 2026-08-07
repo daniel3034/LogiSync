@@ -4,13 +4,11 @@ import type { Session } from "next-auth";
 import { auth } from "@/auth";
 
 /**
- * Page guard: returns the session for an ADMIN, otherwise redirects.
- *
- * This is the authoritative check. `proxy.ts` performs the same test
- * optimistically, but every page that reads driver data must call this so the
- * check happens as close as possible to the data source.
+ * Page guard: returns the session for any signed-in user, otherwise redirects
+ * to `/login`. Needed for `/dashboard`, which DRIVER accounts must reach —
+ * `requireAdmin()` would bounce them back into a redirect loop.
  */
-export async function requireAdmin(callbackUrl?: string): Promise<Session> {
+export async function requireSession(callbackUrl?: string): Promise<Session> {
   const session = await auth();
 
   if (!session?.user) {
@@ -19,6 +17,19 @@ export async function requireAdmin(callbackUrl?: string): Promise<Session> {
       : "";
     redirect(`/login${params}`);
   }
+
+  return session;
+}
+
+/**
+ * Page guard: returns the session for an ADMIN, otherwise redirects.
+ *
+ * This is the authoritative check. `proxy.ts` performs the same test
+ * optimistically, but every page that reads driver data must call this so the
+ * check happens as close as possible to the data source.
+ */
+export async function requireAdmin(callbackUrl?: string): Promise<Session> {
+  const session = await requireSession(callbackUrl);
 
   if (session.user.role !== "ADMIN") {
     redirect("/dashboard");

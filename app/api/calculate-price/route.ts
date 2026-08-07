@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { calculatePricing, type PricingInput } from "@/lib/pricing";
 import { resolveDestination, resolveOrigin } from "@/lib/waybill-options";
 import { getEffectiveRouteMultiplier } from "@/lib/server/route-pricing";
@@ -11,6 +12,9 @@ import { getEffectiveRouteMultiplier } from "@/lib/server/route-pricing";
  *  - destination: string
  */
 export async function POST(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const body = (await request.json()) as Partial<PricingInput>;
 

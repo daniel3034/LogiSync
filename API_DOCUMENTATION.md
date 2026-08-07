@@ -52,10 +52,14 @@ Server runs at `http://localhost:3000`
 
 ## API Endpoints
 
-> **All `/api/drivers` endpoints require an authenticated `ADMIN` user.** Requests
-> without a session get `401 Unauthorized`; authenticated non-admins get
-> `403 Forbidden`. Sign in at `/login` (see `scripts/seed-admin.mjs` for creating
-> the first admin).
+> **Admin-only API.** Every `/api/drivers`, `/api/waybills`, `/api/admin/*`,
+> `/api/calculate-price`, and PDF endpoint requires an authenticated `ADMIN`
+> session. Requests without a session get `401 Unauthorized`; authenticated
+> non-admins get `403 Forbidden`. Sign in at `/login` (see `pnpm seed:admin`).
+>
+> **Public exception:** `GET /verify/[id]` (HTML page, not under `/api`) shows
+> cargo verification data for a printed waybill QR — no financials, no session
+> required.
 
 ### **Create Driver**
 
@@ -137,13 +141,29 @@ Server runs at `http://localhost:3000`
     }
   }
   ```
-- **Errors:** 400 (invalid weight/volume/destination)
+- **Errors:** 400 (invalid weight/volume/destination), 401 (signed out), 403 (non-admin)
 
 - **Formula Notes:**
   - Billable weight = `max(weight, volume * 250)`
   - Destination multiplier = local `1.0`, regional `1.25`, other `1.5`
   - Fuel surcharge = `8%`
   - Driver payment = `max(clientCost * 0.62, 15)`
+
+### **Waybills**
+
+- **GET / POST** `/api/waybills` — list / create. ADMIN only (`401` / `403` as above).
+- **GET / PUT** `/api/waybills/:id` — fetch / update assignment or status. ADMIN only.
+- **GET** `/api/waybills/:id/pdf` — download PDF. ADMIN only. The QR encodes
+  `/verify/:id` (public), not this API route.
+- **GET** `/api/admin/waybills` — full financials for every shipment. ADMIN only.
+- **GET / PUT / DELETE** `/api/admin/route-pricing` — route multiplier overrides.
+  ADMIN only.
+
+### **Public verification page**
+
+- **GET** `/verify/:id` — HTML cargo verification (sender, receiver, route,
+  weight, volume, status, driver name). No `clientCost`, `driverPayment`, or
+  `netMargin`. Returns a "waybill not found" state for unknown ids.
 
 ---
 
@@ -260,24 +280,30 @@ driver          : Driver (relation)
 
 ## Next Steps
 
-1. **Frontend Integration:** Connect to these endpoints from React components
+1. **Frontend Integration:** Connect remaining UI flows to guarded endpoints
 2. **Route Filter:** Enhance the city filter query logic
-3. **Price Calculator:** Create `/api/calculate-price` endpoint
-4. **Waybill API:** Add waybill CRUD endpoints
-5. **Error Handling:** Add global error middleware
-6. **Validation:** Add input validation library (Zod/Yup)
-7. **Authentication:** Add user auth before moving to production
+3. **Error Handling:** Add global error middleware
+4. **Validation:** Add input validation library (Zod/Yup)
 
 ---
 
 ## Environment Variables Template
 
-Create `.env` file:
+Create `.env` from `.env.example`:
 
 ```
 # Database
-DATABASE_URL="file:./prisma/dev.db"
+DATABASE_URL="postgresql://user:password@localhost:5432/logisync"
 
-# API
-NODE_ENV="development"
+# Auth.js session signing key (required in production).
+# Locally, `pnpm dev` auto-generates one into `.env.local` if unset.
+AUTH_SECRET=""
+
+# Public origin for printed waybill QR codes
+APP_URL=""
+
+# Only needed for `pnpm seed:admin`
+ADMIN_EMAIL=""
+ADMIN_PASSWORD=""
+ADMIN_NAME=""
 ```

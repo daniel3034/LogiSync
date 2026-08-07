@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdminApi } from "@/lib/auth-guard";
 import { prisma } from "@/lib/prisma";
 import { calculatePricing } from "@/lib/pricing";
 import { resolveDestination, resolveOrigin } from "@/lib/waybill-options";
@@ -23,6 +24,9 @@ type WaybillPayload = {
  *   - status: Filter by status (optional)
  */
 export async function GET(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
@@ -57,6 +61,9 @@ export async function GET(request: NextRequest) {
  * Creates a digital waybill and calculates pricing on the server.
  */
 export async function POST(request: NextRequest) {
+  const denied = await requireAdminApi();
+  if (denied) return denied;
+
   try {
     const body = (await request.json()) as WaybillPayload;
 
