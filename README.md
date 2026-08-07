@@ -2,6 +2,8 @@
 
 Simple web app for freight pricing and digital waybills — admin-operated, Central America routes.
 
+[Public Site](https://logisync-bsyr.onrender.com/)
+
 ## Prerequisites
 
 - Node.js 20+
