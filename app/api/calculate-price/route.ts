@@ -84,6 +84,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         clientCost: pricing.clientCost,
+        driverPayment: pricing.driverPayment,
+        netMargin: pricing.netMargin,
+        marginPercent: pricing.marginPercent,
         breakdown: pricing.breakdown,
       },
       { status: 200 }
