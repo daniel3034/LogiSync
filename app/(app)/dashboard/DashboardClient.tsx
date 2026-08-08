@@ -152,8 +152,10 @@ export default function DashboardClient() {
 								waybills.map((waybill) => (
 									<tr key={waybill.id} className="hover:bg-zinc-50">
 										<td className="px-4 py-3">
-											<p className="font-medium text-zinc-800">{waybill.id.slice(-8).toUpperCase()}</p>
-											<p className="text-xs text-zinc-500">{new Date(waybill.createdAt).toLocaleDateString()}</p>
+											<Link href={`/waybill/${waybill.id}`} className="group block">
+												<p className="font-medium text-blue-700 group-hover:underline">{waybill.id.slice(-8).toUpperCase()}</p>
+												<p className="text-xs text-zinc-500">{new Date(waybill.createdAt).toLocaleDateString()}</p>
+											</Link>
 										</td>
 										<td className="px-4 py-3">
 											<p className="font-medium text-zinc-800">{waybill.origin}{" -> "}{waybill.destination}</p>
