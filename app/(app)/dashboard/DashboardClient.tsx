@@ -29,11 +29,14 @@ function statusColor(status: string) {
 	return "bg-zinc-200 text-zinc-700";
 }
 
+type SortOption = "date" | "destination";
+
 export default function DashboardClient() {
 	const [waybills, setWaybills] = useState<Waybill[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [statusFilter, setStatusFilter] = useState("all");
+	const [sortBy, setSortBy] = useState<SortOption>("date");
 
 	useEffect(() => {
 		const loadWaybills = async () => {
@@ -41,8 +44,18 @@ export default function DashboardClient() {
 			setError(null);
 
 			try {
-				const query = statusFilter === "all" ? "" : `?status=${statusFilter}`;
-				const response = await fetch(`/api/waybills${query}`, { cache: "no-store" });
+				const params = new URLSearchParams();
+				if (statusFilter !== "all") {
+					params.set("status", statusFilter);
+				}
+				if (sortBy !== "date") {
+					params.set("sort", sortBy);
+				}
+				const query = params.toString();
+				const response = await fetch(
+					`/api/waybills${query ? `?${query}` : ""}`,
+					{ cache: "no-store" }
+				);
 				const data = (await response.json()) as Waybill[] | { error?: string };
 
 				if (!response.ok) {
@@ -59,7 +72,7 @@ export default function DashboardClient() {
 		};
 
 		void loadWaybills();
-	}, [statusFilter]);
+	}, [statusFilter, sortBy]);
 
 	const metrics = useMemo(() => {
 		const totalAmount = waybills.reduce((accumulator, waybill) => accumulator + waybill.clientCost, 0);
@@ -100,21 +113,38 @@ export default function DashboardClient() {
 					</article>
 				</div>
 
-				<div className="mt-6 flex items-center gap-2">
-					<label htmlFor="status-filter" className="text-sm font-medium text-zinc-700">
-						Filter by status:
-					</label>
-					<select
-						id="status-filter"
-						value={statusFilter}
-						onChange={(event) => setStatusFilter(event.target.value)}
-						className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900"
-					>
-						<option value="all">All</option>
-						<option value="pending">Pending</option>
-						<option value="in_transit">In transit</option>
-						<option value="delivered">Delivered</option>
-					</select>
+				<div className="mt-6 flex flex-wrap items-center gap-4">
+					<div className="flex items-center gap-2">
+						<label htmlFor="status-filter" className="text-sm font-medium text-zinc-700">
+							Filter by status:
+						</label>
+						<select
+							id="status-filter"
+							value={statusFilter}
+							onChange={(event) => setStatusFilter(event.target.value)}
+							className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900"
+						>
+							<option value="all">All</option>
+							<option value="pending">Pending</option>
+							<option value="in_transit">In transit</option>
+							<option value="delivered">Delivered</option>
+						</select>
+					</div>
+
+					<div className="flex items-center gap-2">
+						<label htmlFor="sort-by" className="text-sm font-medium text-zinc-700">
+							Sort by:
+						</label>
+						<select
+							id="sort-by"
+							value={sortBy}
+							onChange={(event) => setSortBy(event.target.value as SortOption)}
+							className="rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900"
+						>
+							<option value="date">Date (newest first)</option>
+							<option value="destination">Destination (A–Z)</option>
+						</select>
+					</div>
 				</div>
 
 				<div className="mt-4 overflow-x-auto rounded-xl ring-1 ring-zinc-200">

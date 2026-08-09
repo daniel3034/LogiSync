@@ -22,6 +22,7 @@ type WaybillPayload = {
  * GET /api/waybills
  * Query params:
  *   - status: Filter by status (optional)
+ *   - sort: "date" (default, newest first) or "destination" (A–Z, then newest)
  */
 export async function GET(request: NextRequest) {
   const denied = await requireAdminApi();
@@ -30,6 +31,14 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status");
+    const sort = searchParams.get("sort");
+
+    if (sort && sort !== "date" && sort !== "destination") {
+      return NextResponse.json(
+        { error: 'Invalid sort. Use "date" or "destination".' },
+        { status: 400 }
+      );
+    }
 
     const waybills = await prisma.waybill.findMany({
       where: status ? { status } : undefined,
@@ -43,7 +52,10 @@ export async function GET(request: NextRequest) {
         status: true,
         createdAt: true,
       },
-      orderBy: { createdAt: "desc" },
+      orderBy:
+        sort === "destination"
+          ? [{ destination: "asc" }, { createdAt: "desc" }]
+          : { createdAt: "desc" },
     });
 
     return NextResponse.json(waybills, { status: 200 });
