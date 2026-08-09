@@ -1,0 +1,34 @@
+{
+  "driver": {
+    "name": "E2E Driver",
+    "phone": "+5035557000000",
+    "truckSize": "medium",
+    "preferredCities": ["San Salvador", "Guatemala City"]
+  },
+  "waybill": {
+    "origin": "San Salvador",
+    "destination": "Guatemala City",
+    "senderName": "E2E Sender Co",
+    "senderPhone": "+5035557110001",
+    "receiverName": "E2E Receiver",
+    "receiverPhone": "+5035557110002",
+    "description": "E2E test cargo — fragile boxes",
+    "weight": "180",
+    "volume": "1.2"
+  },
+  "calculator": {
+    "origin": "San Salvador",
+    "destination": "Guatemala City",
+    "weight": "180",
+    "volume": "1.2"
+  },
+  "routeOverride": {
+    "origin": "San Salvador",
+    "destination": "Guatemala City",
+    "multiplier": "1.25"
+  },
+  "created": {
+    "driverId": null,
+    "waybillId": null
+  }
+}

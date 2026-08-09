@@ -66,8 +66,21 @@ pnpm build        # prisma generate && next build
 pnpm tsgo         # typecheck (the only gate that catches type errors)
 pnpm lint         # eslint
 pnpm test:price   # pricing integration tests (needs `pnpm dev` running)
+pnpm test:e2e     # Playwright e2e against local dev (uses ADMIN_* from .env)
 pnpm seed:admin   # create or reset the ADMIN user
 ```
+
+### End-to-end tests (local)
+
+Playwright covers the major admin workflows (sign-in, calculator, waybill create, drivers, admin assignment, public `/verify`). Generated fixture values live in `e2e/fixtures/test-data.json` and are refreshed at the start of each run.
+
+```bash
+pnpm seed:admin   # once, if you have not already
+pnpm dev          # leave running
+BASE_URL=http://localhost:3000 pnpm test:e2e
+```
+
+Requires `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env`. If `pnpm dev` bound a different port, set `BASE_URL` to match.
 
 ## Demo path
 
