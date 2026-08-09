@@ -113,7 +113,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Driver not found" }, { status: 404 });
     }
 
-    // Delete driver (waybills cascade delete due to schema)
+    // Waybill.driverId is onDelete: SetNull — assigned waybills are unassigned, not deleted.
     await prisma.driver.delete({
       where: { id },
     });

@@ -6,7 +6,7 @@ Written 2026-08-05 by auditing every card against the code.
 
 ## Why this backlog exists
 
-Originally written 2026-08-05 after auditing every card against the code. Calculator wiring, margin view, add-driver UI, and PDF/QR are now done; remaining Sprint 4 gaps are edit-driver, demo seed, the `/routes` pricing view, and the mobile test pass.
+Originally written 2026-08-05 after auditing every card against the code. Calculator wiring, margin view, add-driver UI, PDF/QR, and the `/routes` pricing view are now done; remaining Sprint 4 gaps are edit-driver, demo seed, and the mobile test pass.
 
 Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is done — see Done below.
 
@@ -29,6 +29,7 @@ Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is
 - **Show driver payment and net margin ("Margin View")** — calculate-price returns driverPayment/netMargin/marginPercent; calculator renders them.
 - **Waybill detail page** — `/waybill/[id]` with PDF download link.
 - **Replace the create-next-app starter home page** — branded LogiSync landing with sign-in; no Next.js template copy on `/`.
+- **Repurpose /routes as a route pricing view** — `/routes` lists priced origin→destination pairs with distance and effective multiplier; admin overrides from `/admin/waybills` are reflected.
 
 ---
 
@@ -60,18 +61,6 @@ Wire it up as a `pnpm seed:demo` script alongside the existing `seed:admin`.
 **Acceptance**
 - A fresh database plus `pnpm seed:admin` and `pnpm seed:demo` yields a demo-ready app.
 - Re-running is idempotent.
-
-### Repurpose /routes as a route pricing view
-
-app/(app)/routes/page.tsx hardcodes four Paraguayan cities (Asunción, Ciudad del Este, Encarnación, Luque, San Lorenzo) that exist nowhere else in the system. The app serves Central America — see SERVICE_DESTINATIONS in lib/waybill-options.ts. The page has no database connection and its search does nothing real.
-
-Core Requirement 2 ("Route Filter Engine") is already satisfied by the city filter on /drivers, so this page needs a genuine purpose rather than a duplicate search.
-
-Rebuild it to show real origin→destination pairs with their distance and effective multiplier, sourced from `DESTINATION_DISTANCE_KM`, `getRouteMultiplier()`, and the RoutePricing override table via lib/server/route-pricing.ts.
-
-**Acceptance**
-- Every row corresponds to a route the system can actually price.
-- Admin overrides set in /admin/waybills are reflected here.
 
 ### Mobile browser test pass
 
