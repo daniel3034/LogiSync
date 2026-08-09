@@ -53,7 +53,7 @@ Creation and administration are deliberately separated:
 
 Keep that split. If a card asks for status changes from the dashboard, route them through the existing `PUT` rather than widening what `POST` accepts.
 
-`Waybill.driverId` is `onDelete: SetNull` — deleting a driver **unassigns** their waybills rather than deleting them. Any delete-driver UI should say so. (The inline comment in the `DELETE` handler claiming a cascade is wrong.)
+`Waybill.driverId` is `onDelete: SetNull` — deleting a driver **unassigns** their waybills rather than deleting them. Any delete-driver UI should say so.
 
 ## Financial data is internal
 
