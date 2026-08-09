@@ -29,7 +29,7 @@ const canonicalOrigin = resolveOrigin(origin);
 if (!canonicalDestination) return NextResponse.json({ error: "…" }, { status: 400 });
 ```
 
-Store the canonical form, not the user's spelling. New UI should constrain the input to the list rather than letting a free-text field fail with a 400 after submit — `app/(app)/components/CitySearch.tsx` currently accepts arbitrary text, which is a known mismatch.
+Store the canonical form, not the user's spelling. New UI should constrain the input to the list (see the `<select>` pattern on the calculator and waybill forms) rather than letting a free-text field fail with a 400 after submit.
 
 Admins can override a route's multiplier; `getEffectiveRouteMultiplier()` in `lib/server/route-pricing.ts` resolves the `RoutePricing` table override before falling back to the static table. Pass the result into `calculatePricing()` as `routeMultiplierOverride` — both `/api/calculate-price` and `POST /api/waybills` show the pattern.
 

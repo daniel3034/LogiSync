@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import CitySearch from "../components/CitySearch";
+import {
+  SERVICE_DESTINATIONS,
+  SERVICE_ORIGINS,
+} from "@/lib/waybill-options";
 
 type PricingResult = {
   clientCost: number;
@@ -41,6 +44,8 @@ export default function CalculatorClient() {
     setError(null);
     setResult(null);
 
+    // Selects are limited to SERVICE_ORIGINS / SERVICE_DESTINATIONS, so an
+    // empty value means the user has not chosen yet — never a free-text city.
     if (!origin || !destination) {
       setError("Please select origin and destination.");
       return;
@@ -66,7 +71,9 @@ export default function CalculatorClient() {
       const data = (await response.json()) as PricingResult | { error?: string };
 
       if (!response.ok) {
-        throw new Error("error" in data ? (data.error ?? "Failed to calculate") : "Failed to calculate");
+        throw new Error(
+          "error" in data ? (data.error ?? "Failed to calculate") : "Failed to calculate",
+        );
       }
 
       setResult(data as PricingResult);
@@ -86,19 +93,39 @@ export default function CalculatorClient() {
         </p>
 
         <div className="mt-6 space-y-4">
-          <CitySearch
-            label="Origin City"
-            placeholder="Search origin city..."
-            value={origin}
-            onChange={setOrigin}
-          />
+          <div>
+            <label className="block text-sm font-medium text-zinc-900">Origin City</label>
+            <select
+              value={origin}
+              onChange={(e) => setOrigin(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-600"
+            >
+              <option value="">Select origin</option>
+              {SERVICE_ORIGINS.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <CitySearch
-            label="Destination City"
-            placeholder="Search destination city..."
-            value={destination}
-            onChange={setDestination}
-          />
+          <div>
+            <label className="block text-sm font-medium text-zinc-900">
+              Destination City
+            </label>
+            <select
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-600"
+            >
+              <option value="">Select destination</option>
+              {SERVICE_DESTINATIONS.map((city) => (
+                <option key={city} value={city}>
+                  {city}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -146,17 +173,23 @@ export default function CalculatorClient() {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-xl bg-blue-50 p-4">
                 <p className="text-xs uppercase tracking-wide text-blue-600">Client Cost</p>
-                <p className="mt-1 text-2xl font-bold text-blue-900">{formatMoney(result.clientCost)}</p>
+                <p className="mt-1 text-2xl font-bold text-blue-900">
+                  {formatMoney(result.clientCost)}
+                </p>
               </div>
               <div className="rounded-xl bg-zinc-50 p-4">
                 <p className="text-xs uppercase tracking-wide text-zinc-500">Driver Payment</p>
-                <p className="mt-1 text-2xl font-bold text-zinc-900">{formatMoney(result.driverPayment)}</p>
+                <p className="mt-1 text-2xl font-bold text-zinc-900">
+                  {formatMoney(result.driverPayment)}
+                </p>
               </div>
               <div className="rounded-xl bg-emerald-50 p-4">
                 <p className="text-xs uppercase tracking-wide text-emerald-600">Net Margin</p>
                 <p className="mt-1 text-2xl font-bold text-emerald-700">
                   {formatMoney(result.netMargin)}
-                  <span className="ml-2 text-sm font-normal text-emerald-600">({result.marginPercent}%)</span>
+                  <span className="ml-2 text-sm font-normal text-emerald-600">
+                    ({result.marginPercent}%)
+                  </span>
                 </p>
               </div>
             </div>
@@ -164,14 +197,38 @@ export default function CalculatorClient() {
             <details className="rounded-xl border border-zinc-200 px-4 py-3 text-sm text-zinc-700">
               <summary className="cursor-pointer font-medium text-zinc-800">Breakdown</summary>
               <dl className="mt-3 space-y-1.5">
-                <div className="flex justify-between"><dt className="text-zinc-500">Base fee</dt><dd>{formatMoney(result.breakdown.baseFee)}</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Billable weight</dt><dd>{result.breakdown.billableWeightKg} kg</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Volumetric weight</dt><dd>{result.breakdown.volumetricWeightKg} kg</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Distance</dt><dd>{result.breakdown.distanceKm} km</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Distance charge</dt><dd>{formatMoney(result.breakdown.distanceCharge)}</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Destination multiplier</dt><dd>{result.breakdown.destinationMultiplier}×</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Route multiplier</dt><dd>{result.breakdown.routeMultiplier}×</dd></div>
-                <div className="flex justify-between"><dt className="text-zinc-500">Fuel surcharge</dt><dd>{formatMoney(result.breakdown.fuelSurcharge)}</dd></div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Base fee</dt>
+                  <dd>{formatMoney(result.breakdown.baseFee)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Billable weight</dt>
+                  <dd>{result.breakdown.billableWeightKg} kg</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Volumetric weight</dt>
+                  <dd>{result.breakdown.volumetricWeightKg} kg</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Distance</dt>
+                  <dd>{result.breakdown.distanceKm} km</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Distance charge</dt>
+                  <dd>{formatMoney(result.breakdown.distanceCharge)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Destination multiplier</dt>
+                  <dd>{result.breakdown.destinationMultiplier}×</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Route multiplier</dt>
+                  <dd>{result.breakdown.routeMultiplier}×</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-zinc-500">Fuel surcharge</dt>
+                  <dd>{formatMoney(result.breakdown.fuelSurcharge)}</dd>
+                </div>
               </dl>
             </details>
           </div>
