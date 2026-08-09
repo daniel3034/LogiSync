@@ -6,18 +6,7 @@ Written 2026-08-05 by auditing every card against the code.
 
 ## Why this backlog exists
 
-The board had drifted from the codebase in both directions: three cards sat in "In Progress" that were finished, and the largest gaps had no cards at all. In particular:
-
-- **Core Requirement 1 (Driver Management Directory) has no UI.** The CRUD endpoints exist and are properly guarded; nothing in the browser calls `POST` or `PUT`. Drivers can only be created by writing to the database.
-- **Core Requirement 3 (Freight Price Calculator) is faked in the UI.** `lib/pricing.ts` is correct and tested, but `app/(app)/calculator/page.tsx` returns `Math.random()` and `/api/calculate-price` discards `driverPayment`, `netMargin`, and `marginPercent` before responding.
-
-## Critical path to a working demo
-
-Sprint 4 holds several cards. If you have to cut, these three are what actually gate a demo:
-
-1. **Wire the calculator to the real pricing engine** — otherwise the headline feature is a random number generator.
-2. **Add / edit a driver from the web UI** — otherwise Core Requirement 1 cannot be demonstrated.
-3. **Show driver payment and net margin** — the pricing engine already returns them; the API still strips them.
+Originally written 2026-08-05 after auditing every card against the code. Calculator wiring, margin view, add-driver UI, and PDF/QR are now done; remaining Sprint 4 gaps are edit-driver, demo seed, the `/routes` pricing view, and the mobile test pass.
 
 Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is done — see Done below.
 
@@ -34,23 +23,16 @@ Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is
 - **Auth Setup Ownership Needed** — per-machine `AUTH_SECRET` via `scripts/ensure-auth-secret.mjs`, no committed fallback, setup docs in README.
 - **Setup and demo documentation** — README covers env vars, migrate, seed:admin, AUTH_SECRET local vs production, and the demo path.
 - **PDF download from the dashboard and after creation** — DownloadWaybillPdfButton on each dashboard row (app/(app)/dashboard/DashboardClient.tsx) and on the waybill-created success state (app/(app)/waybill/WaybillClient.tsx); shared control also used by /admin/waybills.
+- **PDF Export & QR Codes** — PDF generation embeds a QR pointing at `/verify/[id]`; download wired from dashboard, waybill success, and admin.
+- **Add a driver from the web UI** — AddDriverForm on /drivers posts through the existing admin-guarded create path.
+- **Wire the calculator to the real pricing engine** — CalculatorClient POSTs `/api/calculate-price`; origin/destination limited to SERVICE_ORIGINS / SERVICE_DESTINATIONS.
+- **Show driver payment and net margin ("Margin View")** — calculate-price returns driverPayment/netMargin/marginPercent; calculator renders them.
+- **Waybill detail page** — `/waybill/[id]` with PDF download link.
+- **Replace the create-next-app starter home page** — branded LogiSync landing with sign-in; no Next.js template copy on `/`.
 
 ---
 
 ## Sprint 4
-
-### Add a driver from the web UI
-
-Core Requirement 1, user story "Add driver".
-
-`POST /api/drivers` already exists and is admin-guarded (app/api/drivers/route.ts). There is no form anywhere in the app — drivers can currently only be created by writing to the database directly.
-
-Build a create-driver form (name, phone, truck size, preferred cities) on /drivers, reusing the page's existing table and app/(app)/components/Button.tsx.
-
-**Acceptance**
-- An admin can add a driver and see it appear in the list without touching the database.
-- A duplicate phone surfaces the existing 409 as a readable message, not a stack trace.
-- Required-field validation works before submit.
 
 ### Edit a driver's profile and preferred cities
 
@@ -63,58 +45,6 @@ Add per-row edit on /drivers covering name, phone, truck size, and preferred cit
 **Acceptance**
 - Changing a driver's preferred cities immediately changes which city searches return them on /drivers.
 - Phone uniqueness conflict (409) is shown readably.
-
-### Wire the calculator to the real pricing engine
-
-Core Requirement 3. The pricing engine is correct and tested (lib/pricing.ts, scripts/test-calculate-price.mjs) but the calculator page never calls it.
-
-app/(app)/calculator/page.tsx:14 returns `Math.floor(Math.random() * 1500) + 300`, and the page itself renders the disclaimer "Demo value for frontend. It will be replaced by the backend calculation."
-
-Replace with a `POST /api/calculate-price` call. The page's CitySearch inputs also accept free text while the API only accepts the nine cities in lib/waybill-options.ts — constrain the inputs to SERVICE_ORIGINS / SERVICE_DESTINATIONS.
-
-**Acceptance**
-- The displayed cost matches `pnpm test:price` output for the same inputs.
-- An unserviced city is rejected in the UI, not by a 400 after submit.
-
-**Blocks:** "Show driver payment and net margin".
-
-### Show driver payment and net margin ("Margin View")
-
-Core Requirement 3, user story "Margin View": *As a business owner, I want to see our net profit margin on the screen before confirming the trip.*
-
-`calculatePricing()` in lib/pricing.ts already returns `driverPayment`, `netMargin`, and `marginPercent`. app/api/calculate-price/route.ts throws all three away and returns only `clientCost` and `breakdown`.
-
-Return them from the endpoint and render them on the calculator.
-
-**Note:** this is internal financial data. The calculate-price endpoint is already admin-guarded.
-
-**Acceptance**
-- An admin sees client cost, driver payment, and margin percent before confirming a trip.
-
-**Depends on:** "Wire the calculator to the real pricing engine".
-
-### Waybill detail page
-
-The "Frontend mockup" card promises "the user can also select a waybill to see more details".
-
-`GET /api/waybills/:id` exists and returns the waybill with its driver. Dashboard rows are not clickable and there is no detail route.
-
-Add `/waybill/[id]`.
-
-**Acceptance**
-- Clicking a dashboard row opens full sender/receiver/cargo/pricing/driver detail.
-- The page links to the PDF download.
-
-### Replace the create-next-app starter home page
-
-app/page.tsx is still the unmodified create-next-app template: Next.js logo, the heading "To get started, edit the page.tsx file", and outbound links to Vercel templates and the Next.js learning centre.
-
-It is the first screen anyone visiting the deployed app sees, including a grader.
-
-Replace with a short LogiSync landing page describing the service (per the "Frontend mockup" card: "a main (home) page that describes the service") and a sign-in link.
-
-**Acceptance**
-- No Next.js branding or template copy remains on /.
 
 ### Demo seed script
 
