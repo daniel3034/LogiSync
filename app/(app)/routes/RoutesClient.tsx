@@ -1,68 +1,104 @@
 "use client";
 
 import { useState } from "react";
+import type { PricedRoute } from "@/lib/server/route-pricing";
 
-const routes = [
-  {
-    id: 1,
-    origin: "Asunción",
-    destination: "Ciudad del Este",
-  },
-  {
-    id: 2,
-    origin: "Asunción",
-    destination: "Encarnación",
-  },
-  {
-    id: 3,
-    origin: "Luque",
-    destination: "San Lorenzo",
-  },
-  {
-    id: 4,
-    origin: "Asunción",
-    destination: "Luque",
-  },
-];
+type RoutesClientProps = {
+  routes: PricedRoute[];
+};
 
-export default function RoutesClient() {
+export default function RoutesClient({ routes }: RoutesClientProps) {
   const [search, setSearch] = useState("");
 
-  const filteredRoutes = routes.filter((route) =>
-    route.destination.toLowerCase().includes(search.toLowerCase())
-  );
+  const query = search.trim().toLowerCase();
+  const filteredRoutes = query
+    ? routes.filter(
+        (route) =>
+          route.origin.toLowerCase().includes(query) ||
+          route.destination.toLowerCase().includes(query),
+      )
+    : routes;
+
+  const overrideCount = routes.filter((route) => route.isOverride).length;
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">
-        Route Search
-      </h1>
+    <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <label
+            htmlFor="route-search"
+            className="block text-sm font-medium text-zinc-900"
+          >
+            Filter routes
+          </label>
+          <input
+            id="route-search"
+            type="search"
+            placeholder="Search origin or destination…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mt-1 w-full max-w-md rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none focus:border-blue-600"
+          />
+        </div>
+        <p className="text-sm text-zinc-500">
+          {filteredRoutes.length} of {routes.length} routes
+          {overrideCount > 0 ? ` · ${overrideCount} with overrides` : ""}
+        </p>
+      </div>
 
-      <input
-        type="text"
-        placeholder="Search destination city..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="border rounded-lg p-3 w-full max-w-md mb-6"
-      />
-
-      <table className="w-full border-collapse border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2">Origin</th>
-            <th className="border p-2">Destination</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {filteredRoutes.map((route) => (
-            <tr key={route.id}>
-              <td className="border p-2">{route.origin}</td>
-              <td className="border p-2">{route.destination}</td>
+      <div className="mt-4 overflow-x-auto rounded-xl bg-white shadow">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-zinc-200 text-zinc-600">
+            <tr>
+              <th className="px-4 py-3 font-medium">Origin</th>
+              <th className="px-4 py-3 font-medium">Destination</th>
+              <th className="px-4 py-3 font-medium">Distance</th>
+              <th className="px-4 py-3 font-medium">Default ×</th>
+              <th className="px-4 py-3 font-medium">Effective ×</th>
+              <th className="px-4 py-3 font-medium">Source</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredRoutes.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
+                  {query
+                    ? `No routes match “${search.trim()}”.`
+                    : "No priced routes available."}
+                </td>
+              </tr>
+            ) : (
+              filteredRoutes.map((route) => (
+                <tr
+                  key={`${route.origin}|${route.destination}`}
+                  className="border-b border-zinc-100 last:border-0"
+                >
+                  <td className="px-4 py-3 text-zinc-900">{route.origin}</td>
+                  <td className="px-4 py-3 text-zinc-900">{route.destination}</td>
+                  <td className="px-4 py-3 text-zinc-700">
+                    {route.distanceKm.toLocaleString()} km
+                  </td>
+                  <td className="px-4 py-3 text-zinc-700">
+                    {route.defaultMultiplier.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3 font-medium text-zinc-900">
+                    {route.effectiveMultiplier.toFixed(2)}
+                  </td>
+                  <td className="px-4 py-3">
+                    {route.isOverride ? (
+                      <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800">
+                        Admin override
+                      </span>
+                    ) : (
+                      <span className="text-zinc-500">Default</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
