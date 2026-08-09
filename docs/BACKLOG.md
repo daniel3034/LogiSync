@@ -2,11 +2,11 @@
 
 Mirror of the [Trello board](https://trello.com/b/tJSo9Rjp/logisync). **Trello is the source of truth**; this file exists so the work is reviewable in the repo and in pull requests. If they disagree, believe Trello.
 
-Written 2026-08-05 by auditing every card against the code.
+Written 2026-08-05 by auditing every card against the code. Last synced with Trello and `main` on 2026-08-08.
 
 ## Why this backlog exists
 
-Originally written 2026-08-05 after auditing every card against the code. Calculator wiring, margin view, add-driver UI, PDF/QR, and the `/routes` pricing view are now done; remaining Sprint 4 gaps are edit-driver, demo seed, and the mobile test pass.
+Originally written 2026-08-05 after auditing every card against the code. Calculator wiring, margin view, add-driver UI, PDF/QR, the `/routes` pricing view, and delete-driver UI are now done; remaining Sprint 4 gaps are edit-driver, demo seed, destination sort on the dashboard, and the mobile test pass.
 
 Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is done — see Done below.
 
@@ -30,6 +30,7 @@ Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is
 - **Waybill detail page** — `/waybill/[id]` with PDF download link.
 - **Replace the create-next-app starter home page** — branded LogiSync landing with sign-in; no Next.js template copy on `/`.
 - **Repurpose /routes as a route pricing view** — `/routes` lists priced origin→destination pairs with distance and effective multiplier; admin overrides from `/admin/waybills` are reflected.
+- **No way to delete a driver from the UI** — DeleteDriverButton on /drivers with confirmation that waybills are unassigned (SetNull); DELETE handler comment corrected (PR #25).
 
 ---
 
@@ -37,7 +38,7 @@ Auth hardening (ADMIN on every endpoint, page guards, public QR verification) is
 
 ### Edit a driver's profile and preferred cities
 
-Core Requirement 1, user story "Update routes".
+Core Requirement 1, user story "Update routes". In Progress on Trello.
 
 `PUT /api/drivers/:id` exists and is admin-guarded (app/api/drivers/[id]/route.ts). No UI calls it.
 
@@ -48,6 +49,8 @@ Add per-row edit on /drivers covering name, phone, truck size, and preferred cit
 - Phone uniqueness conflict (409) is shown readably.
 
 ### Demo seed script
+
+In Progress on Trello.
 
 scripts/seed-admin.mjs creates only the admin user. A fresh database gives an empty dashboard, an empty driver list, and nothing to demonstrate.
 
@@ -61,6 +64,17 @@ Wire it up as a `pnpm seed:demo` script alongside the existing `seed:admin`.
 **Acceptance**
 - A fresh database plus `pnpm seed:admin` and `pnpm seed:demo` yields a demo-ready app.
 - Re-running is idempotent.
+
+### Dashboard sorts by date only
+
+Core Requirement 4, user story "Waybill dashboard": *As an admin, I want to see an overview page of all digital waybills sorted by date and destination.* Promoted from Fixes into Sprint 4.
+
+app/api/waybills/route.ts orders by `createdAt` desc only, and the dashboard offers no sort control (only a status filter).
+
+Add a destination sort option.
+
+**Acceptance**
+- The dashboard can be sorted by destination as well as by date.
 
 ### Mobile browser test pass
 
@@ -83,27 +97,7 @@ Log each defect found as its own card in Fixes.
 
 ## Fixes
 
-### No way to delete a driver from the UI
-
-`DELETE /api/drivers/:id` exists and is admin-guarded (app/api/drivers/[id]/route.ts). Nothing in the app calls it.
-
-Add a delete action with confirmation on /drivers.
-
-**Note for the confirmation copy:** `Waybill.driverId` is `onDelete: SetNull` in prisma/schema.prisma, so deleting a driver orphans their waybills rather than removing them. The inline comment in the DELETE handler says "waybills cascade delete due to schema" — that comment is wrong and should be corrected while you're in there.
-
-**Acceptance**
-- Deleting a driver asks for confirmation and states that their waybills will be unassigned, not deleted.
-
-### Dashboard sorts by date only
-
-Core Requirement 4, user story "Waybill dashboard": *As an admin, I want to see an overview page of all digital waybills sorted by date and destination.*
-
-app/api/waybills/route.ts orders by `createdAt` desc only, and the dashboard offers no sort control (only a status filter).
-
-Add a destination sort option.
-
-**Acceptance**
-- The dashboard can be sorted by destination as well as by date.
+*(empty — destination sort promoted into Sprint 4; delete-driver moved to Done)*
 
 
 ---
@@ -133,4 +127,3 @@ Would require a CLIENT role, a User→Waybill relation, a migration, and per-cli
 `PUT /api/waybills/:id` accepts status changes (pending → in_transit → delivered) and validates them against the allowed list, but only the admin panel exposes the control.
 
 Let an admin advance status directly from the dashboard or the waybill detail page.
-
