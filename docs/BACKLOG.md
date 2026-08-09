@@ -67,7 +67,7 @@ Wire it up as a `pnpm seed:demo` script alongside the existing `seed:admin`.
 
 ### Dashboard sorts by date only
 
-Core Requirement 4, user story "Waybill dashboard": *As an admin, I want to see an overview page of all digital waybills sorted by date and destination.* Promoted from Fixes into Sprint 4.
+Core Requirement 4, user story "Waybill dashboard": *As an admin, I want to see an overview page of all digital waybills sorted by date and destination.* Promoted from Fixes into Sprint 4. In Progress on Trello.
 
 app/api/waybills/route.ts orders by `createdAt` desc only, and the dashboard offers no sort control (only a status filter).
 
