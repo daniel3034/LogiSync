@@ -2,7 +2,7 @@
 -- Drop table
 -- DROP TABLE public.city;
 CREATE TABLE public.city (
-    city_id uuid DEFAULT uuidv7() NOT NULL,
+    city_id text NOT NULL,
     city_name text NULL,
     creation_date timestamp DEFAULT now() NULL,
     update_date timestamp NULL,

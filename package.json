@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:price": "node scripts/test-calculate-price.mjs",
-    "seed:admin": "node scripts/seed-admin.mjs"
+    "seed:admin": "node scripts/seed-admin.mjs",
+    "seed:demo": "tsx scripts/seed-demo.mts"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.8.0",
@@ -36,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
+    "tsx": "^4.20.0",
     "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@11.18.0"
