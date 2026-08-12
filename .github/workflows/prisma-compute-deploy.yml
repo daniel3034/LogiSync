@@ -32,14 +32,15 @@ jobs:
       - name: Validate Prisma token
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-          PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
-          PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
+          # Use non-PRISMA_* names: --project and env PRISMA_PROJECT_ID are mutually exclusive.
+          DEPLOY_PROJECT: ${{ secrets.PRISMA_PROJECT_ID }}
+          DEPLOY_APP: ${{ secrets.PRISMA_APP_ID }}
         run: |
           if [ -z "$PRISMA_SERVICE_TOKEN" ]; then
             echo "Missing GitHub secret: PRISMA_SERVICE_TOKEN"
             exit 1
           fi
-          if [ -z "$PRISMA_PROJECT_ID" ] || [ -z "$PRISMA_APP_ID" ]; then
+          if [ -z "$DEPLOY_PROJECT" ] || [ -z "$DEPLOY_APP" ]; then
             echo "Missing GitHub secrets: PRISMA_PROJECT_ID and/or PRISMA_APP_ID"
             exit 1
           fi
@@ -48,15 +49,20 @@ jobs:
       - name: List visible Prisma projects
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-          PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
-          PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
         run: bunx @prisma/cli@latest project list --json
 
       - name: Deploy app to Prisma Compute
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
-          PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
-          PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
+          DEPLOY_PROJECT: ${{ secrets.PRISMA_PROJECT_ID }}
+          DEPLOY_APP: ${{ secrets.PRISMA_APP_ID }}
         run: |
           rm -rf .prisma
-          bunx @prisma/cli@latest app deploy --project "$PRISMA_PROJECT_ID" --app "$PRISMA_APP_ID" --branch main --framework nextjs --no-interactive --yes --json
+          bunx @prisma/cli@latest app deploy \
+            --project "$DEPLOY_PROJECT" \
+            --app "$DEPLOY_APP" \
+            --branch main \
+            --framework nextjs \
+            --no-interactive \
+            --yes \
+            --json
