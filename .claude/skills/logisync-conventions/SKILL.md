@@ -66,7 +66,7 @@ const { city } = await searchParams;
 
 **Financial and canonicalisation logic lives on the server.** See the `logisync-pricing` skill.
 
-**Comments explain *why*, and several are load-bearing.** `lib/cities.ts` documents why a `contains` query alone is wrong; `auth-guard.ts` documents why the check is duplicated. Preserve that reasoning when editing. One known-stale comment: the `DELETE` handler in `app/api/drivers/[id]/route.ts` claims "waybills cascade delete due to schema", but the relation is `onDelete: SetNull`.
+**Comments explain *why*, and several are load-bearing.** `lib/cities.ts` documents why a `contains` query alone is wrong; `auth-guard.ts` documents why the check is duplicated. Preserve that reasoning when editing.
 
 ## Testing reality
 

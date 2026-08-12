@@ -3,6 +3,7 @@ import { collectCities, matchesCity, parseCities } from "@/lib/cities";
 import { prisma } from "@/lib/prisma";
 import AddDriverForm from "./AddDriverForm";
 import CityFilter from "./CityFilter";
+import DeleteDriverButton from "./DeleteDriverButton";
 
 export default async function DriversPage({
   searchParams,
@@ -64,12 +65,15 @@ export default async function DriversPage({
               <th className="px-4 py-3 font-medium">Truck size</th>
               <th className="px-4 py-3 font-medium">Preferred cities</th>
               <th className="px-4 py-3 font-medium">Waybills</th>
+              <th className="px-4 py-3 font-medium">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {drivers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-zinc-500">
+                <td colSpan={6} className="px-4 py-8 text-center text-zinc-500">
                   {selectedCity
                     ? `No drivers serve ${selectedCity}.`
                     : "No drivers yet."}
@@ -93,6 +97,13 @@ export default async function DriversPage({
                   </td>
                   <td className="px-4 py-3 text-zinc-700">
                     {driver._count.waybills}
+                  </td>
+                  <td className="px-4 py-3">
+                    <DeleteDriverButton
+                      driverId={driver.id}
+                      driverName={driver.name}
+                      waybillCount={driver._count.waybills}
+                    />
                   </td>
                 </tr>
               ))
