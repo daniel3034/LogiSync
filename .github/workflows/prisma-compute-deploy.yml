@@ -63,6 +63,7 @@ jobs:
             --app "$DEPLOY_APP" \
             --branch main \
             --framework nextjs \
+            --prod \
             --no-interactive \
             --yes \
             --json
