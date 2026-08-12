@@ -43,14 +43,14 @@ jobs:
             echo "Missing GitHub secrets: PRISMA_PROJECT_ID and/or PRISMA_APP_ID"
             exit 1
           fi
-          bunx @prisma/cli@preview auth whoami
+          bunx @prisma/cli@latest auth whoami
 
       - name: List visible Prisma projects
         env:
           PRISMA_SERVICE_TOKEN: ${{ secrets.PRISMA_SERVICE_TOKEN }}
           PRISMA_PROJECT_ID: ${{ secrets.PRISMA_PROJECT_ID }}
           PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
-        run: bunx @prisma/cli@preview project list --trace
+        run: bunx @prisma/cli@latest project list --json
 
       - name: Deploy app to Prisma Compute
         env:
@@ -59,4 +59,4 @@ jobs:
           PRISMA_APP_ID: ${{ secrets.PRISMA_APP_ID }}
         run: |
           rm -rf .prisma
-          bunx @prisma/cli@preview app deploy --project "$PRISMA_PROJECT_ID" --app "$PRISMA_APP_ID" --branch main --build-type nextjs --no-interactive --yes --trace
+          bunx @prisma/cli@latest app deploy --project "$PRISMA_PROJECT_ID" --app "$PRISMA_APP_ID" --branch main --framework nextjs --no-interactive --yes --json
