@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import AddDriverForm from "./AddDriverForm";
 import CityFilter from "./CityFilter";
 import DeleteDriverButton from "./DeleteDriverButton";
+import EditDriverRow from "./EditDriverRow";
 
 export default async function DriversPage({
   searchParams,
@@ -99,11 +100,22 @@ export default async function DriversPage({
                     {driver._count.waybills}
                   </td>
                   <td className="px-4 py-3">
-                    <DeleteDriverButton
-                      driverId={driver.id}
-                      driverName={driver.name}
-                      waybillCount={driver._count.waybills}
-                    />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <EditDriverRow
+                        driver={{
+                          id: driver.id,
+                          name: driver.name,
+                          phone: driver.phone,
+                          truckSize: driver.truckSize,
+                          preferredCities: driver.preferredCities,
+                        }}
+                      />
+                      <DeleteDriverButton
+                        driverId={driver.id}
+                        driverName={driver.name}
+                        waybillCount={driver._count.waybills}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))

@@ -39,6 +39,31 @@ test.describe.serial("drivers directory", () => {
     recordCreatedIds({ driverId: created?.id ?? null });
   });
 
+  test("updates a driver profile and preferred cities", async ({ page }) => {
+    const { driver } = loadTestData();
+    const nextPhone = "+503 9999-1111";
+    const cityToRemove = driver.preferredCities[0];
+    const cityToAdd = "San Miguel";
+
+    await page.goto("/drivers");
+    await expect(page.getByRole("cell", { name: driver.name })).toBeVisible();
+
+    const row = page.getByRole("row").filter({ hasText: driver.name });
+    await row.getByRole("button", { name: "Edit" }).click();
+
+    await row.locator('input[name="name"]').fill(`${driver.name} Updated`);
+    await row.locator('input[name="phone"]').fill(nextPhone);
+    await row.locator('select[name="truckSize"]').selectOption("large");
+
+    await row.getByRole("checkbox", { name: cityToRemove }).uncheck();
+    await row.getByRole("checkbox", { name: cityToAdd }).check();
+    await row.getByRole("button", { name: "Save" }).click();
+
+    await expect(page.getByText("Driver updated.")).toBeVisible();
+    await expect(page.getByRole("cell", { name: `${driver.name} Updated` })).toBeVisible();
+    await expect(page.getByText(`serving ${cityToAdd}`)).toBeVisible();
+  });
+
   test("filters drivers by preferred destination city", async ({ page }) => {
     const { driver } = loadTestData();
     const city = driver.preferredCities[0];

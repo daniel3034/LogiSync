@@ -21,7 +21,7 @@ A Next.js 16 freight waybill app. The versions here are new enough that habits f
 | Package manager | pnpm 11.18.0 | lockfile is committed |
 | Deploy | Prisma Compute | `.github/workflows/prisma-compute-deploy.yml`, manual dispatch |
 
-Note the deploy target: the project proposal says Vercel or Render, but the actual pipeline deploys to Prisma Compute via `bunx @prisma/cli@preview app deploy`. It is `workflow_dispatch` only — nothing deploys on push.
+Note the deploy target: the project proposal says Vercel or Render, but the actual pipeline deploys to Prisma Compute via `bunx @prisma/cli@latest app deploy`. It is `workflow_dispatch` only — nothing deploys on push. Use `@latest` (beta), not `@preview` (alpha) — preview's app commands falsely report `PROJECT_NOT_FOUND`.
 
 ## Commands
 
